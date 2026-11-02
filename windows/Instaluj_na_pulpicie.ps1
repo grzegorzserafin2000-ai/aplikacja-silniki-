@@ -1,11 +1,11 @@
 ﻿$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 function Pokaz([string]$text, [string]$icon='Information') {
-    [System.Windows.Forms.MessageBox]::Show($text, 'Clima Gold Windows 2.7 TEST', 'OK', $icon) | Out-Null
+    [System.Windows.Forms.MessageBox]::Show($text, 'Clima Gold Ziehl-Abegg', 'OK', $icon) | Out-Null
 }
 try {
     $source = $PSScriptRoot
-    $dest = Join-Path $env:LOCALAPPDATA 'Programs\ClimaGold_ZIEHL'
+    $dest = Join-Path $env:LOCALAPPDATA 'Programs\ClimaGold_ZIEHL_CM3'
     $desktop = [Environment]::GetFolderPath('DesktopDirectory')
     if (-not (Test-Path $desktop)) { throw 'Nie znaleziono pulpitu Windows.' }
     $python = $null
@@ -43,14 +43,23 @@ try {
     & $pythonExe -c 'import serial, tkinter' *> $null
     if ($LASTEXITCODE -ne 0) { throw 'Brak serial lub tkinter po instalacji.' }
     $wsh = New-Object -ComObject WScript.Shell
-    $shortcut = $wsh.CreateShortcut((Join-Path $desktop 'Clima Gold - ZIEHL-ABEGG.lnk'))
+    $shortcutPath = Join-Path $desktop 'Clima Gold Ziehl-Abegg.lnk'
+    if (Test-Path $shortcutPath) {
+        $existing = $wsh.CreateShortcut($shortcutPath)
+        if ($existing.TargetPath -ne $pythonwExe) {
+            $separate = Join-Path $desktop 'Clima Gold - wersja CM3'
+            New-Item -ItemType Directory -Path $separate -Force | Out-Null
+            $shortcutPath = Join-Path $separate 'Clima Gold Ziehl-Abegg.lnk'
+        }
+    }
+    $shortcut = $wsh.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $pythonwExe
     $shortcut.Arguments = '"' + (Join-Path $dest 'launcher.pyw') + '"'
     $shortcut.WorkingDirectory = $dest
     $shortcut.IconLocation = (Join-Path $assets 'climagold.ico') + ',0'
-    $shortcut.Description = 'Clima Gold Windows 2.7 TEST'
+    $shortcut.Description = 'Clima Gold Ziehl-Abegg'
     $shortcut.Save()
-    Pokaz 'Zainstalowano. Uruchom skrot Clima Gold - ZIEHL-ABEGG na pulpicie. Program otwiera sie bez czarnej konsoli.'
+    Pokaz ("Zainstalowano. Skrot: " + $shortcutPath + ". Program otwiera sie bez czarnej konsoli.")
 } catch {
     Pokaz $_.Exception.Message 'Error'
     exit 1

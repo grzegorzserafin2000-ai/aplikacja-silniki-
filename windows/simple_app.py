@@ -14,7 +14,7 @@ BG='#111315'; PANEL='#202328'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#B9BEC4'
 class SimpleApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('Clima Gold – ZIEHL-ABEGG 2.7 TEST')
+        self.title('Clima Gold Ziehl-Abegg')
         self.geometry(f'740x{min(840,self.winfo_screenheight()-100)}');self.minsize(620,560)
         self.configure(bg=BG)
         try: self.iconbitmap(str(resource_path('assets/climagold.ico')))
@@ -53,12 +53,11 @@ class SimpleApp(tk.Tk):
         self.bind_all('<MouseWheel>',lambda e:canvas.yview_scroll(-1 if e.delta>0 else 1,'units'))
         top=tk.Frame(outer,bg=BG);top.pack(fill='x',pady=(0,17))
         try:
-            self.icon=tk.PhotoImage(file=str(resource_path('assets/climagold_mark.png'))).subsample(5,5)
-            tk.Label(top,image=self.icon,bg=BG).pack(side='left',padx=(0,14))
-        except Exception:pass
-        header=tk.Frame(top,bg=BG);header.pack(side='left')
-        self.label(header,'CLIMA GOLD',24,bold=True).pack(anchor='w')
-        self.label(header,'ZIEHL-ABEGG  •  Windows 2.7 TEST',11,ORANGE,True).pack(anchor='w')
+            self.icon=tk.PhotoImage(file=str(resource_path('assets/climagold_full.png'))).subsample(3,3)
+            tk.Label(top,image=self.icon,bg='white',padx=12,pady=8).pack(anchor='w')
+        except tk.TclError:
+            self.label(top,'Clima Gold',24,bold=True).pack(anchor='w')
+        self.label(top,'ZIEHL-ABEGG  •  Konfigurator',11,ORANGE,True).pack(anchor='w',pady=(5,0))
 
         a=self.panel(outer)
         self.label(a,'1. Wykryj silnik',18,bold=True).pack(anchor='w',pady=(0,10))
@@ -148,7 +147,7 @@ class SimpleApp(tk.Tk):
         messagebox.showinfo('Ustawienia fabryczne komunikacji',
             'Przygotowano: 247 / 19200 / Even / 1.\n\n'
             'Nie wysłano żadnego zapisu. To ustawienia komunikacji, nie pełny reset silnika.\n'
-            'Zapis wykonasz przyciskiem „ZMIEŃ PARAMETRY”.')
+            'Zapis wykonasz przyciskiem „ZMIEŃ PARAMETRY”. Kodowanie obejmuje także CM=3.')
     def target_word(self):
         return encode_h3(int(self.manual_addr.get()),int(self.manual_baud.get()),
                 '8'+{'None':'N','Even':'E','Odd':'O'}[self.manual_parity.get()]+self.manual_stop.get())
@@ -160,7 +159,8 @@ class SimpleApp(tk.Tk):
         if d:
             saved=f'{d.saved.address} / {d.saved.baud} / {d.saved.mode}' if d.saved else 'niepotwierdzone'
             raw=f'0x{d.raw_h3:04X}' if d.raw_h3 is not None else 'brak'
-            details=f'Model: {d.model_name}\nFirmware: {d.firmware if d.firmware is not None else "brak odczytu"}\nPort: {d.port}\nAktywne połączenie: {d.active_info}\nZapisane h3: {saved} ({raw})'
+            cm=f'{d.control_word & 15} / 3' if d.control_word is not None else 'brak odczytu / 3'
+            details=f'Model: {d.model_name}\nFirmware: {d.firmware if d.firmware is not None else "brak odczytu"}\nPort: {d.port}\nAktywne połączenie: {d.active_info}\nZapisane h3: {saved} ({raw})\nCM (odczyt / cel): {cm}'
             self.device_details.insert('1.0',details)
         self.device_details.config(state='disabled')
     def copy_log(self):
@@ -228,7 +228,7 @@ class SimpleApp(tk.Tk):
             v=decode_h3(target)
         except Exception as e:messagebox.showwarning('Błędne dane',str(e));return
         if not messagebox.askyesno('Potwierdź zmianę',
-             f'Nowy adres: {v.address}\nParametry: {v.baud} / {v.mode}\n\n'
+             f'Nowy adres: {v.address}\nParametry: {v.baud} / {v.mode}\nCM: 3\n\n'
              'Czy podłączony jest tylko jeden zatrzymany silnik, odłączony od działającej centrali?\n'
              'Po zmianie program sprawdzi rezultat.'):
             return
@@ -257,7 +257,7 @@ class SimpleApp(tk.Tk):
                         self.manual_addr.set(str(x.active_address));self.manual_baud.set(str(x.baud))
                         self.manual_parity.set({'N':'None','E':'Even','O':'Odd'}[x.parity]);self.manual_stop.set(str(x.stopbits))
                     self.describe()
-                    self.log=f'Clima Gold Windows 2.7 TEST\nSkanowanie: {metrics}\n'+self.device_details.get('1.0','end').strip()
+                    self.log=f'Clima Gold Windows CM3 TEST\nSkanowanie: {metrics}\n'+self.device_details.get('1.0','end').strip()
                     if x:messagebox.showinfo('Wykryto silnik',f'Adres: {x.active_address}\nPołączenie: {x.baud} / {x.parity} / {x.stopbits}')
                 elif k=='programmed':
                     self.log=x.details
@@ -267,7 +267,7 @@ class SimpleApp(tk.Tk):
                         target=decode_h3(self.target)
                         self.detected=replace(self.detected,active_address=target.address,baud=target.baud,
                             parity=target.mode[1],stopbits=int(target.mode[2]),raw_h3=self.target,saved=target,
-                            function=3,register=3,exception=0)
+                            function=3,register=3,exception=0,control_word=x.control_word)
                         self.device.set(f'Potwierdzono adres {target.address}');self.describe()
                     elif x.attempted:
                         self.detected=None;self.device.set('Zmiana niepotwierdzona. Wykryj silnik ponownie.');self.describe()

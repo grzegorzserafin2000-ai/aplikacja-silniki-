@@ -63,3 +63,22 @@ class GuiTests(unittest.TestCase):
   self.app.busy=True;before=self.app.target_word();self.app.select_factory()
   self.assertEqual(self.app.target_word(),before)
   self.app.update_ui();self.assertEqual(str(self.app.factory_btn.cget('state')),'disabled')
+ def test_card_cm_readout_and_target(self):
+  from dataclasses import replace
+  self.app.detected=replace(self.device(),control_word=0x5200);self.app.describe()
+  self.assertIn('CM (odczyt / cel): 0 / 3',self.app.device_details.get('1.0','end'))
+ @patch('simple_app.messagebox.showinfo')
+ def test_cm_confirmed_result_shows_three_three(self,_):
+  self.app.detected=self.device();self.app.target=encode_h3(232)
+  self.app.events.put(('programmed',Result('ok','CM 3/3','log',True,0x5203)));self.app.handle()
+  self.assertEqual(self.app.detected.control_word,0x5203)
+  self.assertIn('CM (odczyt / cel): 3 / 3',self.app.device_details.get('1.0','end'))
+ @patch('simple_app.messagebox.showinfo')
+ def test_cm_failure_is_not_shown_as_success(self,_):
+  self.app.detected=self.device();self.app.target=encode_h3(232)
+  self.app.events.put(('programmed',Result('incomplete','CM niepotwierdzone','log',True)));self.app.handle()
+  self.assertIsNone(self.app.detected);self.assertIn('niepotwierdzona',self.app.device.get())
+
+ def test_original_product_name_and_full_logo(self):
+  self.assertEqual(self.app.title(),'Clima Gold Ziehl-Abegg')
+  self.assertEqual((self.app.icon.width(),self.app.icon.height()),(400,60))

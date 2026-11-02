@@ -20,6 +20,8 @@ public final class CommunicationTest {
         int storeDelay=0,activationDelay=0;
         boolean ack=true,rejectWrite=false,pinAck=true,ignoreWrite=false,ignoreActivation=false,immediateOnStore=false;
         int targetProduct=-1;
+        int controlWord=3;
+        boolean cmMissing=false,cmReject=false,cmIgnore=false,cmLostAck=false,cmChangeOnPin=false;
         int speed;String mode;
         boolean aliasReads=false;
         int liveAddress=231,liveBaud=9600;String liveMode="8N2";
@@ -47,11 +49,21 @@ public final class CommunicationTest {
                 if(reg==3)h3At=clock.time;
                 writes.add(reg+":"+value);writeAddresses.add(slave);
                 if(reg==0 && value==1234 && !pinAck)return null;
+                if(reg==0 && value==1234 && cmChangeOnPin)controlWord^=0x100;
+                if(reg==4) {
+                    if(cmReject)return new ModbusRtu.Reply(slave,0x86,-1,3);
+                    if(!cmIgnore)controlWord=value;
+                    return cmLostAck?null:new ModbusRtu.Reply(slave,fn,value,0);
+                }
                 if(reg==3 && rejectWrite)return new ModbusRtu.Reply(slave,0x86,-1,3);
                 if(reg==3 && !ignoreWrite){newWord=value;storedAt=clock.time+storeDelay;if(immediateOnStore)activatedAt=storedAt;}
                 if(reg==0 && value==3698 && !ignoreActivation)activatedAt=clock.time+activationDelay;
                 return ack?new ModbusRtu.Reply(slave,fn,value,0):
                         reg==0 && value==1234?new ModbusRtu.Reply(slave,fn,value,0):null;
+            }
+            if(fn==3 && reg==4) {
+                if(cmMissing){clock.sleep(timeout);return null;}
+                return new ModbusRtu.Reply(slave,fn,controlWord,0);
             }
             return new ModbusRtu.Reply(slave,fn,fn==4?(activated && targetProduct>=0?targetProduct:product):word,0);
         }
@@ -145,6 +157,28 @@ public final class CommunicationTest {
         m.configure(9600,"8E1");
         check(m.transaction(231,6,3,TARGET,1100)==null && m.word==OLD,
                 "Fixture reproduces unchanged h3 and missing FC06 reply with wrong framing");
+        c=new Clock();m=new Motor(c);m.controlWord=0xA5B0;
+        r=program(m,0x0100,OLD,OLD);
+        check(r.success && r.controlWord==0xA5B3,"CM 0->3 preserves upper 12 bits");
+        check(m.writes.equals(Arrays.asList("0:1234","4:"+0xA5B3)),"Same communication still programs CM, without h3/3698");
+        check(CommunicationProgrammer.withCm3(0xFFF0)==0xFFF3,"Mask preserves all non-CM flags");
+        c=new Clock();m=new Motor(c);m.controlWord=0x5200;m.cmLostAck=true;
+        r=program(m,0x0100,OLD,TARGET);
+        check(r.success && m.controlWord==0x5203,"CM succeeds with lost ACK only after readback");
+        check(m.writeAddresses.get(m.writeAddresses.size()-1)==230,"h4 goes to confirmed NEW address");
+        check(m.writes.stream().filter(v->v.startsWith("4:")).count()==1,"CM never retransmitted");
+        c=new Clock();m=new Motor(c);m.controlWord=0;m.cmIgnore=true;
+        r=program(m,0x0100,OLD,OLD);
+        check(!r.success && m.writes.stream().filter(v->v.startsWith("4:")).count()==1,"CM ACK without mutation is not success");
+        c=new Clock();m=new Motor(c);m.controlWord=0;m.cmReject=true;
+        r=program(m,0x0100,OLD,OLD);
+        check(!r.success,"CM exception is not complete coding");
+        c=new Clock();m=new Motor(c);m.cmMissing=true;
+        r=program(m,0x0100,OLD,OLD);
+        check(!r.success && m.writes.isEmpty(),"Missing h4 blocks CM writes and success");
+        c=new Clock();m=new Motor(c);m.controlWord=0;m.cmChangeOnPin=true;
+        r=program(m,0x0100,OLD,OLD);
+        check(!r.success && m.writes.stream().noneMatch(v->v.startsWith("4:")),"Changed h4 prevents overwriting flags");
         byte[] known={1,3,0,0,0,10};
         check(ModbusRtu.crc16(known,known.length)==0xCDC5,"Published MODBUS CRC vector");
         check(ModbusRtu.configValue(231,9600,"8N2")==0xE713,"CAREL bit layout");

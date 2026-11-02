@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * controller codes; writing remains locked for unverified device families.
  */
 public final class MainActivity extends Activity {
-    private static final String USB_ACTION = "pl.cg.ziehlconfig.USB_PERMISSION";
+    private static final String USB_ACTION = "pl.cg.ziehlconfig.cm3.USB_PERMISSION";
     private static final int NAVY = Color.rgb(21, 23, 25);
     private static final int BLUE = Color.rgb(245, 105, 22);
     private static final int LIGHT = Color.rgb(17, 19, 21);
@@ -256,17 +256,16 @@ public final class MainActivity extends Activity {
             scroll.requestApplyInsets();
         }
         LinearLayout top=new LinearLayout(this);
-        top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.setOrientation(LinearLayout.VERTICAL);
         top.setPadding(dp(10),dp(10),dp(10),dp(10));
         ImageView logo=new ImageView(this);
-        logo.setImageResource(R.drawable.climagold_mark);
+        logo.setImageResource(R.drawable.climagold_full);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        top.addView(logo,new LinearLayout.LayoutParams(dp(65),dp(65)));
-        LinearLayout title=column();title.setPadding(dp(14),0,0,0);
-        add(title,text("CLIMA GOLD",23,WHITE,true),0);
-        add(title,text("ZIEHL-ABEGG  •  Konfigurator",13,BLUE,true),4);
-        top.addView(title,new LinearLayout.LayoutParams(0,-2,1));
+        logo.setBackgroundColor(WHITE);
+        logo.setPadding(dp(8),dp(8),dp(8),dp(8));
+        logo.setContentDescription("Clima Gold");
+        top.addView(logo,new LinearLayout.LayoutParams(-1,dp(96)));
+        add(top,text("ZIEHL-ABEGG  •  Konfigurator",13,BLUE,true),8);
         add(root,top,0);
 
         LinearLayout detect=card(); add(root,detect,16);
@@ -458,7 +457,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG TEST 0.17 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -558,12 +557,16 @@ public final class MainActivity extends Activity {
     private static final class Hit {
         final SerialBridge.Link link;
         final int address, raw, function, register, exception;
-        final int productCode, firmware;
+        final int productCode, firmware, controlWord;
         Hit(SerialBridge.Link link, int address, int raw, int fn, int reg, int ex) {
             this(link,address,raw,fn,reg,ex,-1,-1);
         }
         Hit(SerialBridge.Link link, int address, int raw, int fn, int reg, int ex,
             int productCode, int firmware) {
+            this(link,address,raw,fn,reg,ex,productCode,firmware,-1);
+        }
+        Hit(SerialBridge.Link link, int address,int raw,int fn,int reg,int ex,int productCode,int firmware,int controlWord) {
+            this.controlWord=controlWord;
             this.link=link; this.address=address; this.raw=raw;
             this.function=fn; this.register=reg; this.exception=ex;
             this.productCode=productCode; this.firmware=firmware;
@@ -573,7 +576,7 @@ public final class MainActivity extends Activity {
 
     /** Manufacturer identification is read separately from a generic MODBUS response. */
     private Hit inspectDevice(SerialBridge io, Hit hit, int timeout) {
-        int h3=-1,code=-1,fw=-1;
+        int h3=-1,code=-1,fw=-1,control=-1;
         try {
             ModbusRtu.Reply a=io.transaction(hit.address,3,3,0,Math.max(350,timeout));
             if(a!=null && a.successful()) h3=a.value;
@@ -586,7 +589,13 @@ public final class MainActivity extends Activity {
             ModbusRtu.Reply a=io.transaction(hit.address,4,0,0,Math.max(350,timeout));
             if(a!=null && a.successful()) fw=a.value;
         } catch(Exception ignored) {}
-        return new Hit(hit.link,hit.address,h3,hit.function,hit.register,hit.exception,code,fw);
+        if(code==0x0100 || code==0x0101) {
+            try {
+                ModbusRtu.Reply value=io.transaction(hit.address,3,4,0,Math.max(350,timeout));
+                if(value!=null && value.successful())control=value.value;
+            } catch(Exception ignored) { }
+        }
+        return new Hit(hit.link,hit.address,h3,hit.function,hit.register,hit.exception,code,fw,control);
     }
 
     /** A valid response does not yet establish a model or its register layout. */
@@ -627,6 +636,7 @@ public final class MainActivity extends Activity {
         readResult.setText("Identyfikacja: " +identity + firmware +
             "\nAKTYWNE połączenie: "+result.address+" / "+result.link.label+
             "\nZAPISANE w h3: "+com+
+            "\nCM (odczyt / cel): "+(result.controlWord>=0?String.valueOf(result.controlWord&15):"brak odczytu")+" / 3"+
             (compatibleWriteProfile ? "\nZgodność rejestru h3 i aktywnej komunikacji potwierdzona."
             : pending ? "\nZapisane parametry różnią się od aktywnych. Wpisz zapisany adres jako cel, aby zastosować go bez ponownego zapisu h3."
                       : "\nBrak zweryfikowanego profilu zapisu — dostępny tylko odczyt."));
@@ -668,7 +678,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG Android TEST 0.17\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
@@ -728,7 +738,8 @@ public final class MainActivity extends Activity {
                       .append(hit.raw>=0 && ModbusRtu.resemblesEcblueComParameter(hit.raw) ? ModbusRtu.description(hit.raw) : "NIEPOTWIERDZONE").append("\n")
                       .append("h3 odczyt: ").append(hit.raw>=0 ? String.format(java.util.Locale.US,"0x%04X",hit.raw) : "BRAK").append("\n")
                       .append("Kod produktu i1: ").append(AutoProfile.productLabel(hit.productCode)).append("\n")
-                      .append("Firmware i0: ").append(hit.firmware).append("\n");
+                      .append("Firmware i0: ").append(hit.firmware).append("\n")
+                      .append("CM odczyt/cel: ").append(hit.controlWord>=0?String.valueOf(hit.controlWord&15):"BRAK").append("/3\n");
             } else report.append(cancel.get()?"PRZERWANO\n":"BRAK ODPOWIEDZI\n");
             final Hit result=hit;
             final String finalError=error;
@@ -774,7 +785,7 @@ public final class MainActivity extends Activity {
         new AlertDialog.Builder(this)
           .setTitle("Zmienić ustawienia silnika?")
           .setMessage("Aktualny adres: "+foundAddress+"\nNowy adres: "+address+"\nKomunikacja: "+baud+" / "+mode+
-              "\n\nPotwierdź, że podłączony jest tylko jeden zatrzymany silnik, odłączony od pracującej centrali. "+
+              "\nTryb sterowania CM: 3\n\nPotwierdź, że podłączony jest tylko jeden zatrzymany silnik, odłączony od pracującej centrali. "+
               "Aplikacja zapisze ustawienia i spróbuje je zastosować. Po operacji sprawdzi wynik.")
           .setNegativeButton("Anuluj",null)
           .setPositiveButton("Zmień parametry",(d,w)->writeConfig(address,baud,mode,config)).show();
@@ -826,6 +837,7 @@ public final class MainActivity extends Activity {
                     "Zapisano, aktywacja niepotwierdzona":"Nie potwierdzono zmiany";
             final String finalText=result.message,finalLog=result.details+"\nRAMKI RTU:\n"+rawTrace;
             final boolean didSend=result.attempted,confirmed=result.success;
+            final int confirmedH4=result.controlWord;
             handler.post(()->{
                 setBusy(false);
                 lastScanReport += "\n\nZAPIS (PROSTA):\n"+finalLog;
@@ -833,7 +845,7 @@ public final class MainActivity extends Activity {
                 new AlertDialog.Builder(this).setTitle(finalTitle)
                   .setMessage(finalText).setPositiveButton("OK",null).show();
                 if(confirmed){
-                    showDetection(new Hit(linkFor(baud,mode),address,newValue,3,3,0,productCode,firmware));
+                    showDetection(new Hit(linkFor(baud,mode),address,newValue,3,3,0,productCode,firmware,confirmedH4));
                     deviceStatus.setText("Potwierdzono adres " + address);
                 } else if(didSend){
                     readResult.setText(finalText);

@@ -1,51 +1,32 @@
-# Clima Gold – ZIEHL-ABEGG Android 0.17 TEST
+# Clima Gold Ziehl-Abegg
 
-## Pobieranie aplikacji
+Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa widoczna na tablecie i w oknie Windows: **Clima Gold Ziehl-Abegg**.
 
-- [Pobierz APK 0.17 TEST](downloads/ClimaGold_017.apk)
-- [Pobierz APK w ZIP](downloads/ClimaGold_017_APK.zip)
-- [Źródła i notebook do budowania](downloads/ClimaGold_017_Zrodla_i_notebook.zip)
+## Pobieranie
 
-Na stronie pliku GitHub wybierz **Download raw file** (ikona pobierania). Całe repozytorium można pobrać przez **Code → Download ZIP**.
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla.zip)
+- [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.0-test/ClimaGold_CM3_Windows_TEST.zip)
+- [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla.zip)
 
-APK pozostaje wersją testową. Kompilacja i testy symulowane przeszły; zmiana adresu na fizycznym silniku wymaga sprawdzenia.
+ZIP Windows należy rozpakować przed uruchomieniem. EXE nie wymaga Pythona. Instalator źródłowy wymaga Python 3.10+ i internetu przy pierwszej instalacji. [Instrukcja Windows](windows/README_PRZECZYTAJ.txt).
 
-Źródła odzyskane z przesłanego notebooka v15; poprawki interfejsu i obsługi komunikacji dotyczą wersji 0.16.
+Android ma osobny applicationId `pl.cg.ziehlconfig.cm3`; stara aplikacja `pl.cg.ziehlconfig` pozostaje osobno. Nazwa jest taka sama zgodnie z prośbą użytkownika. Windows używa osobnego katalogu `ClimaGold_ZIEHL_CM3`; instalator chroni istniejący skrót innej wersji.
 
-- Pole nowego adresu jest zawsze widoczne i przyjmuje wartości 1–247.
-- Zapis używa wpisanego adresu także po wybraniu skrótu Nawiew/Wywiew.
-- Wykrycie wypełnia adres i parametry aktywnego połączenia; odczyt silnika i kopiowanie raportu są na ekranie głównym.
-- Blokada zapisu pokazuje osobno brak obsługi modelu lub niepotwierdzony rejestr h3.
-- Biblioteka USB 3.10.0 jest dołączona ze źródeł upstream, bez zależności od JitPack.
+## Kodowanie
 
-## Budowanie
-JDK 17, Gradle 8.9, Android SDK 35. Ustaw ANDROID_HOME na katalog SDK.
-W katalogu projektu uruchom `gradle --no-daemon --max-workers=2 assembleDebug`.
-APK: `app/build/outputs/apk/debug/app-debug.apk`.
+- Czytelny podgląd modelu, firmware, aktywnej/zapisanej komunikacji i CM (odczyt/cel).
+- Nawiew 231, Wywiew 232 oraz ręczny adres. Fabryczny profil komunikacji 247/19200/Even/1 przygotowuje formularz; zapis wymaga osobnego potwierdzenia.
+- Komunikacja jest weryfikowana na docelowym adresie. Następnie CM w h4 jest ustawiane na 3, z zachowaniem pozostałych bitów. Sukces wymaga odczytu kontrolnego.
+- Niepotwierdzone CM daje wynik niepełnego kodowania. Każdy zapis wysyłany raz; bez automatycznych retransmisji.
+- Zapis ograniczony do rozpoznanych modeli 0x0100/0x0101. VMAX i pozostałe parametry nie są programowane.
 
-## Testy
-Z JDK 17 uruchom `tests/run.sh`: 13 przypadków walidacji adresu i 38 asercji symulowanej komunikacji.
+[Procedura, dowody i ograniczenia](docs/CM3_KODOWANIE.md). [Protokół i testy](docs/PROTOKOL_I_TESTY.md). [Przygotowanie logo](branding/README.md).
 
-## Poprawka po raporcie z silnika
-Wersja 0.16 sprawdza potwierdzony tryb z h3 przed zapisem i dodaje odstępy po zmianie konfiguracji USB oraz PIN. FC06 zachowany po weryfikacji pełnej ścieżki ZAset. [Szczegóły i ograniczenia](docs/DIAGNOSTYKA_016.md).
+## Weryfikacja
 
-## Zmiany komunikacji
-Odstępy RTU, raport TX/RX, odczyty kontrolne przez około 5/15 s i obsługa zapisanych ustawień różniących się od aktywnego adresu. Każdy zapis wysyłany raz. Sukces wymaga odczytu kodu produktu i h3 na docelowym połączeniu.
-Szczegółowa analiza i ograniczenia: [docs/ANALIZA_CAREL_015.md](docs/ANALIZA_CAREL_015.md).
+Android: `JAVA_HOME=<JDK17> tests/run.sh` — 13 przypadków adresu i 48 asercji komunikacji. Budowanie: Gradle 8.9, JDK 17, Android SDK 35, `gradle assembleDebug`.
+Windows: z katalogu `windows`, `python -m unittest discover -s tests -v` — 74 testy, w tym GUI. Workflow buduje EXE na Windows i uruchamia gotowy plik w trybie smoke-test.
 
-## Do sprawdzenia na urządzeniu
-Nie wykonano próby na tablecie ani silniku. Potrzebny jest raport techniczny po jednej próbie na silniku testowym. APK pozostaje testowe.
-Nie rozszerzono listy obsługiwanych modeli. Logo pozostaje dotychczasowe, ponieważ pakiet nie zawiera nowego pliku PNG/SVG z wiadomości.
-APK 0.16 ma ten sam podpis co wydane tutaj 0.14 i 0.15; można je aktualizować bez odinstalowywania.
-
-
-## Windows 2.7 TEST
-
-- [Pakiet źródłowy z instalatorem i skrótem na pulpicie](downloads/ClimaGold_Windows_2_7_TEST_Zrodla.zip) — wymaga Python 3.10+ i internetu przy pierwszej instalacji.
-- [Przenośny EXE dla Windows x64](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-v2.7.0-test/ClimaGold_ZIEHL_Windows_2_7_TEST.zip) — zbudowany na Windows i sprawdzony testem uruchomienia; ZIP należy rozpakować przed uruchomieniem. Nie wymaga Pythona.
-
-Uruchom `ZAINSTALUJ_NA_PULPICIE.vbs` z rozpakowanego pakietu źródłowego. Szczegóły w [windows/README_PRZECZYTAJ.txt](windows/README_PRZECZYTAJ.txt). Kod Windows ma 64 testy, w tym testy okna i edycji adresu. Zapis na fizycznym silniku pozostaje niezweryfikowany.
-
-Windows 2.7 przywraca przycisk Ustawienia fabryczne (247 / 19200 / Even / 1). Sam wybór przycisku tylko wypełnia formularz; zapis wymaga przycisku ZMIEŃ PARAMETRY. Logo pozostaje dotychczasowe do otrzymania dostępnego pliku nowej grafiki.
-
-Android 0.17 przenosi przycisk ustawień fabrycznych na główny ekran tabletu. [Opis i ograniczenia](docs/TABLET_017.md).
+Działanie z fizycznym silnikiem i USB-RS485 nadal wymaga sprawdzenia. Program pozostaje wersją testową. Po próbie należy skopiować raport techniczny TX/RX.

@@ -33,6 +33,7 @@ class Detection:
     exception: int = 0
     product_code: Optional[int] = None
     firmware: Optional[int] = None
+    control_word: Optional[int] = None
 
     @property
     def active_info(self):
@@ -173,7 +174,15 @@ def read_at(connection, port, addr, baud, parity, bits, timeout, stop, metrics):
                             pass
                 except Exception:
                     pass
-            return Detection(port,addr,baud,parity,bits,raw,saved,fn,reg,exception,product,firmware)
+            control = None
+            if product in (0x0100,0x0101) and not stop.is_set():
+                metrics['requests'] += 1
+                try:
+                    cm = exchange_read(connection,addr,3,4,max(timeout,.4),stop)
+                    if cm is not None and cm[1] == 0:control = cm[0]
+                except Exception:
+                    pass
+            return Detection(port,addr,baud,parity,bits,raw,saved,fn,reg,exception,product,firmware,control)
     return None
 
 

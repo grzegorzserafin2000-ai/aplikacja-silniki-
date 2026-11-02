@@ -11,6 +11,7 @@ class Result:
     message: str
     details: str
     attempted: bool
+    control_word: int | None = None
 
 
 def eligible(d):
@@ -31,14 +32,14 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
         raise ModbusError('Niepotwierdzona obsługa docelowej prędkości.')
     import serial
     clock = clock or time
-    log = [f'Clima Gold Windows 2.7 TEST; aktywny {d.active_info if hasattr(d,"active_info") else d.active_address}; h3=0x{d.raw_h3:04X}',
+    log = [f'Clima Gold CM3 Windows TEST; aktywny {d.active_info if hasattr(d,"active_info") else d.active_address}; h3=0x{d.raw_h3:04X}',
            f'Cel {dest.address} / {dest.baud} / {dest.mode} / 0x{target:04X}']
     attempted = False
     live = (d.active_address, d.baud, d.parity, d.stopbits)
     goal = (dest.address, dest.baud, dest.mode[1], int(dest.mode[2]))
 
-    def result(state, message):
-        return Result(state, message, '\n'.join(log), attempted)
+    def result(state, message, control_word=None):
+        return Result(state, message, '\n'.join(log), attempted, control_word)
 
     try:
         with capture_trace(log.append), serial.Serial(port=d.port, baudrate=d.baud, bytesize=8,
@@ -67,6 +68,46 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
             def confirmed(link):
                 return read(link, 4, 1) == d.product_code and read(link) == target
 
+            def finish():
+                nonlocal attempted
+                if not confirmed(goal):
+                    return result('uncertain','Nie potwierdzono docelowego silnika przed CM. CM nie zapisano.')
+                before = read(goal,3,4)
+                if before is None:
+                    return result('incomplete','Komunikacja potwierdzona, ale brak odczytu h4. CM niepotwierdzone.')
+                desired = (before & 0xFFF0) | 3
+                log.append(f'CM h4: 0x{before:04X} -> 0x{desired:04X}; cel CM=3')
+                if before != desired:
+                    attempted = True
+                    try:
+                        request(goal,6,H0_PIN,PIN_LEVEL_1,timeout=.9)
+                    except (TimeoutError,ModbusError,OSError) as error:
+                        log.append(f'PIN przed CM: {error}')
+                        return result('incomplete','Komunikacja potwierdzona, ale brak potwierdzenia PIN przed CM.')
+                    clock.sleep(.5)
+                    if read(goal,3,4) != before:
+                        return result('incomplete','h4 zmienil sie przed zapisem. Zapis CM wstrzymany.')
+                    try:
+                        request(goal,6,4,desired,timeout=1.1)
+                        log.append('h4 wyslano raz: ACK; wymagany odczyt.')
+                    except ModbusException as error:
+                        log.append(str(error))
+                        return result('incomplete','Silnik odrzucil zapis CM. Kodowanie niepelne.')
+                    except (TimeoutError,ModbusError,OSError) as error:
+                        log.append(f'h4 bez pewnego ACK: {error}')
+                    deadline=clock.monotonic()+5
+                    while True:
+                        value=read(goal,3,4)
+                        log.append('Kontrola h4: '+('brak' if value is None else f'0x{value:04X}'))
+                        if value==desired:break
+                        remaining=deadline-clock.monotonic()
+                        if remaining<=0:
+                            return result('incomplete','Komunikacja potwierdzona, ale CM=3 niepotwierdzone odczytem.')
+                        clock.sleep(min(.2,remaining))
+                    if not confirmed(goal):
+                        return result('incomplete','CM odczytano jako 3, ale koncowa kontrola komunikacji nie powiodla sie.')
+                return result('ok' if attempted else 'already',f'Potwierdzono {dest.address} / {dest.baud} / {dest.mode}; CM 3/3.',desired)
+
             progress('Sprawdzam silnik i tryb transmisji...')
             if read(live, 4, 1) != d.product_code or read(live) != d.raw_h3:
                 return result('blocked', 'Dane silnika zmieniły się. Wykryj go ponownie.')
@@ -80,7 +121,7 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
                 elif read(live, 4, 1) != d.product_code or read(live) != d.raw_h3:
                     return result('blocked', 'Nie potwierdzono stabilnego połączenia. Bez zapisu.')
             if target == d.raw_h3 and live == goal:
-                return result('already', 'Silnik już ma podane ustawienia. Nie wykonano zapisu.')
+                return finish()
 
             if target != d.raw_h3:
                 progress('Zapisuję ustawienia...')
@@ -108,7 +149,7 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
                         stored = True
                         break
                     if live != goal and confirmed(goal):
-                        return result('ok', f'Potwierdzono {dest.address} / {dest.baud} / {dest.mode}.')
+                        return finish()
                     remaining = deadline - clock.monotonic()
                     if remaining <= 0:
                         break
@@ -129,7 +170,7 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
             while True:
                 clock.sleep(min(.2, max(0, deadline-clock.monotonic())))
                 if confirmed(goal):
-                    return result('ok', f'Potwierdzono {dest.address} / {dest.baud} / {dest.mode}.')
+                    return finish()
                 if clock.monotonic() >= deadline:
                     break
             if read(live, 4, 1) == d.product_code and read(live) == target:

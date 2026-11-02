@@ -1,19 +1,21 @@
-CLIMA GOLD - ZIEHL-ABEGG WINDOWS 2.7 TEST
+CLIMA GOLD - ZIEHL-ABEGG CM3 WINDOWS TEST
 
 WERSJA PRZENOSNA EXE (bez Pythona):
-Pobierz ZIP z wydania windows-v2.7.0-test na GitHub, rozpakuj calosc i uruchom
-ClimaGold_ZIEHL_Windows_2_7_TEST.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
+Pobierz ZIP z wydania windows-cm3-v1.0.0-test na GitHub, rozpakuj calosc i uruchom
+ClimaGold_CM3_Windows_TEST.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
 Program nie otwiera czarnej konsoli. EXE jest niepodpisane certyfikatem wydawcy.
 
 PAKIET ZRODLOWY / INSTALACJA ZE SKROTEM:
 Wymaga Windows 10/11, Python 3.10+ z tkinter oraz internetu na pierwsza instalacje.
 Rozpakuj ZIP i uruchom ZAINSTALUJ_NA_PULPICIE.vbs.
 Instalator przygotuje izolowane srodowisko i skrot na pulpicie, bez praw administratora.
-Aplikacja instaluje sie w LOCALAPPDATA\Programs\ClimaGold_ZIEHL.
-Nie usuwa ani nie odinstalowuje starszej aplikacji. Aktualizuje jej skrot.
+Aplikacja instaluje sie w LOCALAPPDATA\Programs\ClimaGold_ZIEHL_CM3.
+Tworzy skrot Clima Gold Ziehl-Abegg. Przy kolizji nazwy uzywa osobnego folderu na pulpicie. Nie aktualizuje skrotu ani plikow starej aplikacji.
 Sterownik USB-RS485 musi byc zainstalowany; port powinien byc widoczny w Menedzerze urzadzen.
 
-ZMIANY 2.7:
+FUNKCJE WERSJI CM3:
+- Kodowanie ustawia CM=3 (mlodsze 4 bity h4), zachowuje pozostale bity i sprawdza odczyt.
+- Sukces obejmuje komunikacje i CM. Brak potwierdzenia CM oznacza kodowanie niepelne.
 - Przywrocono widoczny przycisk USTAWIENIA FABRYCZNE: 247 / 19200 / Even / 1.
   Przycisk wypelnia pola; zapis nastepuje dopiero po wybraniu ZMIEN PARAMETRY.
   Nie jest to pelny reset fabryczny silnika.
@@ -28,7 +30,7 @@ WAZNE:
 Nie potwierdzono rozwiazania problemu zapisu na rzeczywistym silniku.
 Testy programowe i uruchomienie GUI nie zastapia proby na urzadzeniu.
 Po jednej probie na pojedynczym silniku testowym skopiuj raport techniczny.
-Logo pozostaje dotychczasowe. Nie dolaczono bibliotek producenta ZAset.
+Osadzono pelne logo dostarczone przez uzytkownika. Nazwa aplikacji: Clima Gold Ziehl-Abegg. Nie dolaczono bibliotek producenta ZAset.
 
 BUDOWANIE EXE:
 Uruchom OPCJONALNIE_Zbuduj_EXE_na_Windows.bat.

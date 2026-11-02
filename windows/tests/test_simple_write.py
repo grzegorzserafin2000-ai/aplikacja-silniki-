@@ -7,7 +7,7 @@ import simple_write
 class Device:
     def __init__(self,active,stored,allow_activation=True):
         self.active=active;self.stored=stored;self.allow_activation=allow_activation
-        self.ops=[]
+        self.ops=[];self.control_word=3
     def conn(self,**kw):
         dev=self
         class Link:
@@ -22,9 +22,11 @@ class Device:
         if not c.matches():raise TimeoutError('not at active address')
         if fn==4 and reg==1:return 0x0100
         if fn==3 and reg==3:return self.stored
+        if fn==3 and reg==4:return self.control_word
         if fn==6:
             self.ops.append((a,reg,val))
             if reg==3:self.stored=val
+            if reg==4:self.control_word=val
             if reg==0 and val==3698 and self.allow_activation:
                 d=simple_write.decode_h3(self.stored)
                 self.active=(d.address,d.baud,d.mode[1],int(d.mode[2]))

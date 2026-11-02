@@ -12,7 +12,7 @@ class Motor:
   self.clock=Clock();self.active=(231,9600,'N',2);self.raw=encode_h3(231)
   self.pending=None;self.store_at=float('inf');self.activate_at=float('inf')
   self.store_delay=0;self.delay=0;self.alias=False;self.lost=False;self.reject=False;self.ignore=False;self.no_activation=False
-  self.ops=[];self.formats=[]
+  self.ops=[];self.formats=[];self.control_word=3;self.cm_missing=False;self.cm_ignore=False;self.cm_reject=False;self.cm_lost=False;self.cm_change_on_pin=False
  def factory(self,**kw):
   conn=NS(baudrate=kw['baudrate'],parity=kw['parity'],stopbits=kw['stopbits'])
   class Context:
@@ -28,9 +28,18 @@ class Motor:
   alias=self.alias and link==(231,9600,'E',1) and self.active==(231,9600,'N',2)
   if link!=self.active and not alias:self.clock.sleep(timeout);raise TimeoutError('offline')
   if fn==4:return 0x0100
-  if fn==3:return self.raw
+  if fn==3:
+   if reg==4:
+    if self.cm_missing:raise TimeoutError('no h4')
+    return self.control_word
+   return self.raw
   if alias and reg==3:raise TimeoutError('wrong framing')
   self.ops.append((address,reg,val));self.formats.append(link)
+  if reg==0 and val==1234 and self.cm_change_on_pin:self.control_word^=0x100
+  if reg==4:
+   if self.cm_reject:raise ModbusException(3)
+   if not self.cm_ignore:self.control_word=val
+   if self.cm_lost:raise TimeoutError('lost h4 ACK')
   if reg==3:
    if self.reject:raise ModbusException(3)
    if not self.ignore:self.pending=val;self.store_at=self.clock.value+self.store_delay
@@ -70,3 +79,24 @@ class ProgrammingTests(unittest.TestCase):
   m=Motor();m.active=(247,19200,'E',1);m.raw=encode_h3(247,19200,'8E1');r=self.run_motor(m)
   self.assertEqual(r.state,'ok');self.assertEqual(m.active,(232,9600,'N',2))
   self.assertTrue(all(v==(247,19200,'E',1) for v in m.formats))
+
+ def test_cm3_preserves_flags_with_same_address(self):
+  m=Motor();m.control_word=0xA5B0;r=self.run_motor(m,target=encode_h3(231))
+  self.assertEqual(r.state,'ok');self.assertEqual(r.control_word,0xA5B3)
+  self.assertEqual(m.ops,[(231,0,1234),(231,4,0xA5B3)])
+ def test_cm_lost_ack_readback_new_address(self):
+  m=Motor();m.control_word=0x5200;m.cm_lost=True;r=self.run_motor(m)
+  self.assertEqual(r.state,'ok');self.assertEqual(m.ops[-1],(232,4,0x5203))
+  self.assertEqual(len([v for v in m.ops if v[1]==4]),1)
+ def test_cm_ack_without_mutation_incomplete(self):
+  m=Motor();m.control_word=0;m.cm_ignore=True;r=self.run_motor(m,target=encode_h3(231))
+  self.assertEqual(r.state,'incomplete');self.assertEqual(len([v for v in m.ops if v[1]==4]),1)
+ def test_cm_unreadable_no_success_no_write(self):
+  m=Motor();m.cm_missing=True;r=self.run_motor(m,target=encode_h3(231))
+  self.assertEqual(r.state,'incomplete');self.assertFalse(m.ops)
+ def test_cm_changed_flags_abort(self):
+  m=Motor();m.control_word=0;m.cm_change_on_pin=True;r=self.run_motor(m,target=encode_h3(231))
+  self.assertEqual(r.state,'incomplete');self.assertFalse([v for v in m.ops if v[1]==4])
+ def test_cm_exception_incomplete(self):
+  m=Motor();m.control_word=0;m.cm_reject=True;r=self.run_motor(m,target=encode_h3(231))
+  self.assertEqual(r.state,'incomplete')

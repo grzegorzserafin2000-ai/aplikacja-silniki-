@@ -1,28 +1,16 @@
-# Odczyt i zapis – MODBUS RTU
+# MODBUS RTU — Clima Gold CM3 — Android / Windows TEST
 
-## Wykrywanie
-Skaner wysyła **wyłącznie** polecenie FC03: Read Holding Register, rejestr `h3` (adres PDU `0x0003`) po kolei na adresy 1–247. Najpierw najczęściej spotykane adresy (247/221/231/1) na kilku konfiguracjach portu, następnie pełny skan. Wszystkie odpowiedzi są sprawdzane przez CRC16 i zgodność adresu.
+Wykrywanie jest tylko odczytem FC03 i FC04 z CRC, adresem i funkcją odpowiedzi. Odczyt i1 identyfikuje model, i0 firmware; h3 opisuje komunikację, h4 tryb sterowania CM. Zapis jest dostępny tylko dla rozpoznanych kodów 0x0100/0x0101 z poprawnym h3 i świeżą weryfikacją danych.
 
-Rejestr `h3` może być niedostępny w niektórych silnikach. Jeśli silnik odpowie prawidłową ramką wyjątku MODBUS (FC83), aplikacja pokaże, że urządzenie odpowiedziało, ale zablokuje zapis.
+## h3
+Bity 15..8: adres 1..247. Bity 7..4: baud code (0=4800, 1=9600, 2=19200, 3=38400, 4=115200). Bity 3..0: 0=8N1, 1=8O1, 2=8E1, 3=8N2. Zapis 38400/115200 nadal zablokowany w tym profilu.
+Przykład 231 / 9600 / 8N2: 0xE713.
+Nowe h3: PIN 1234 -> jeden FC06 h3 -> odczyt kontrolny. Aktywacja 3698 tylko po potwierdzeniu zapisanego celu; sprawdzenie nowego i1+h3 do około 15 s. Brak automatycznych retransmisji zapisów.
 
-## Struktura COM Parameter h3 z dokumentu L-BAL-E076-GB
-- Bity 15–8: adres jednostki (1–247).
-- Bity 7–4: kod prędkości 0=4800, 1=9600, 2=19200, 3=38400 (nie każdy silnik), 4=115200 (nie każdy silnik).
-- Bity 3–0: 0=8N1, 1=8O1, 2=8E1, 3=8N2 (nie każdy silnik).
+## CM w h4
+Po potwierdzeniu docelowego połączenia ustawiane jest CM=3 przez read/modify/write `(h4 & 0xFFF0) | 3`. Pozostałe bity są zachowywane. Wymagany jest osobny odczyt kontrolny h4. Szczegóły dowodów, kolejności i ograniczeń: [CM3_KODOWANIE.md](CM3_KODOWANIE.md).
 
-Przykład: 231, 9600, 8N2 → `(231 << 8) | (1 << 4) | 3` = `0xE713`.
-
-## Zapis – TYLKO po potwierdzeniu profilu
-1. Ponownie czytaj `h3` przez stary aktywny adres i format. Wartość musi być zgodna z odczytem wykrywania.
-2. Zapisz PIN 1234 do `h0` (FC06) w celu uzyskania poziomu 1.
-3. Zapisz nowe słowo do `h3` (FC06).
-4. Natychmiast odczytaj `h3` (FC03) i porównaj z oczekiwaną wartością.
-5. Użytkownik wykonuje bezpieczny restart sprzętowy; skanuj ponownie.
-
-Brak automatycznego restartu i brak automatycznego zatwierdzania PIN 3698. Dla innych modeli aplikacja pozostaje tylko do odczytu.
-
-## Ograniczenia
-- Brak automatycznej identyfikacji modelu po numerze typu.
-- Sterowniki USB zależą od konwertera. Biblioteka nie obsługuje każdego kabla.
-- Oprogramowanie wymaga testu na fizycznym silniku i Androidzie, szczególnie przy przerwach transmisji, błędnej parzystości i rozbieżności aktywnego/zapisanego adresu.
-- Testy `ProtocolSelfTest.java` sprawdzają ramki i CRC, **nie** fizyczną komunikację, nie są testem zgodności z nowymi modelami.
+## Testy
+Android: `JAVA_HOME=<JDK17> tests/run.sh` i Gradle assembleDebug.
+Windows: z katalogu windows `python -m unittest discover -s tests -v`. Testy GUI wymagają Windows lub dostępnego ekranu X; pominięty test nie jest traktowany jako wykonany. Workflow buduje EXE na Windows i uruchamia go w trybie smoke-test.
+Testy symulowane nie potwierdzają działania z fizycznym silnikiem i adapterem RS485.

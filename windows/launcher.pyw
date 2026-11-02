@@ -10,11 +10,16 @@ from datetime import datetime
 def main():
     smoke = '--smoke-test' in sys.argv
     try:
+        if os.name == 'nt':
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ClimaGold.CM3.1')
         from simple_app import SimpleApp
         app = SimpleApp()
         if smoke:
             app.withdraw()
             app.update()
+            assert app.title() == 'Clima Gold Ziehl-Abegg'
+            assert app.icon.width() == 400
             app.apply_preset(231)
             app.manual_addr.set('230')
             from protocol import decode_h3
@@ -32,14 +37,14 @@ def main():
             app.destroy()
             if '--smoke-report' in sys.argv:
                 target = Path(sys.argv[sys.argv.index('--smoke-report') + 1])
-                target.write_text(json.dumps({'version': '2.7 TEST', 'gui_started': True,
+                target.write_text(json.dumps({'version': '1.0 CM3 TEST', 'gui_started': True, 'logo_loaded': True,
                     'editable_address_after_preset': True, 'factory_communication_preset': True}), encoding='utf-8')
             return 0
         app.mainloop()
         return 0
     except Exception:
         report = traceback.format_exc()
-        log_dir = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'ClimaGold_ZIEHL' / 'logs'
+        log_dir = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'ClimaGold_ZIEHL_CM3' / 'logs'
         try:
             log_dir.mkdir(parents=True, exist_ok=True)
             (log_dir / 'ostatni_blad.txt').write_text(datetime.now().isoformat(timespec='seconds') + '\n\n' + report, encoding='utf-8')

@@ -26,17 +26,23 @@ public final class CommunicationProgrammer {
     public static final class Result {
         public final boolean success,pending,attempted;
         public final String message,details;
+        public final int controlWord;
         Result(boolean success,boolean pending,boolean attempted,String message,String details) {
+            this(success,pending,attempted,message,details,-1);
+        }
+        Result(boolean success,boolean pending,boolean attempted,String message,String details,int controlWord) {
             this.success=success;this.pending=pending;this.attempted=attempted;this.message=message;this.details=details;
+            this.controlWord=controlWord;
         }
     }
     private final Transport io;
     private final RtuSession.Clock clock;
     private final StringBuilder log=new StringBuilder();
     private boolean attempted;
+    private int confirmedControlWord=-1;
     public CommunicationProgrammer(Transport io,RtuSession.Clock clock) { this.io=io;this.clock=clock; }
     private Result result(boolean success,boolean pending,String message) {
-        return new Result(success,pending,attempted,message,log.toString());
+        return new Result(success,pending,attempted,message,log.toString(),confirmedControlWord);
     }
     private ModbusRtu.Reply request(Settings link,int function,int register,int value,int timeout) throws IOException {
         io.configure(link.baud,link.mode);
@@ -53,8 +59,49 @@ public final class CommunicationProgrammer {
         // A write echo / acknowledgement is never proof of a changed link.
         return read(target,4,1)==product && read(target,3,3)==word;
     }
+    public static int withCm3(int h4) {
+        if(h4<0 || h4>65535)throw new IllegalArgumentException("Niepoprawne h4");
+        return (h4 & 0xFFF0) | 3;
+    }
+    /** Finish only on a freshly confirmed target link. CM is h4 bits 0..3. */
+    private Result finish(Settings target,int product,int word) throws IOException {
+        if(!targetConfirmed(target,product,word))
+            return result(false,false,"Nie potwierdzono docelowego silnika przed CM. CM nie zapisano.");
+        int before=read(target,3,4);
+        if(before<0)return result(false,false,"Komunikacja potwierdzona, ale nie odczytano CM z h4. Kodowanie niepełne.");
+        int desired=withCm3(before);
+        log.append(String.format(java.util.Locale.US,"CM h4: 0x%04X -> 0x%04X; cel CM=3\n",before,desired));
+        if(before!=desired) {
+            attempted=true;
+            ModbusRtu.Reply pin=request(target,6,0,1234,900);
+            if(pin==null || !pin.successful())
+                return result(false,false,"Komunikacja potwierdzona, ale brak potwierdzenia PIN przed CM. CM nie zapisano.");
+            clock.sleep(500);
+            if(read(target,3,4)!=before)
+                return result(false,false,"h4 zmienił się przed zapisem CM. Zapis CM wstrzymany.");
+            try {
+                ModbusRtu.Reply written=request(target,6,4,desired,1100);
+                if(written!=null && !written.successful())
+                    return result(false,false,"Silnik odrzucił zapis CM do h4 (kod "+written.exception+").");
+                log.append("h4 wysłano raz; ").append(written==null?"brak ACK":"ACK").append('\n');
+            } catch(IOException e) { log.append("h4: odpowiedź niepewna: ").append(e.getMessage()).append('\n'); }
+            long deadline=clock.now()+5000;
+            boolean verified=false;
+            do {
+                int value=read(target,3,4);
+                log.append(String.format(java.util.Locale.US,"Kontrola h4: %s\n",value<0?"brak odpowiedzi":String.format(java.util.Locale.US,"0x%04X",value)));
+                if(value==desired) { verified=true;break; }
+                if(clock.now()<deadline)clock.sleep(Math.min(200,deadline-clock.now()));
+            } while(clock.now()<deadline);
+            if(!verified)return result(false,false,"Komunikacja potwierdzona, ale CM=3 niepotwierdzone odczytem. Kodowanie niepełne.");
+            if(!targetConfirmed(target,product,word))
+                return result(false,false,"CM odczytano jako 3, ale końcowa kontrola komunikacji nie powiodła się.");
+        }
+        confirmedControlWord=desired;
+        return result(true,false,"Potwierdzono "+target.address+" / "+target.baud+" / "+target.mode+"; CM 3/3.");
+    }
     public Result run(Settings live,int product,int previousWord,int targetWord) {
-        log.setLength(0);attempted=false;
+        log.setLength(0);attempted=false;confirmedControlWord=-1;
         if((product!=0x0100 && product!=0x0101) ||
                 !ModbusRtu.resemblesEcblueComParameter(previousWord) ||
                 !ModbusRtu.resemblesEcblueComParameter(targetWord))
@@ -84,7 +131,7 @@ public final class CommunicationProgrammer {
                 }
             }
             if(previousWord==targetWord && live.same(target))
-                return result(true,false,"Silnik już ma podane ustawienia. Bez zapisu.");
+                return finish(target,product,targetWord);
             if(previousWord!=targetWord) {
                 attempted=true;
                 ModbusRtu.Reply pin=request(live,6,0,1234,900);
@@ -108,7 +155,7 @@ public final class CommunicationProgrammer {
                     log.append("Odczyt h3: ").append(raw<0?"brak odpowiedzi":String.format(java.util.Locale.US,"0x%04X",raw)).append('\n');
                     if(raw==targetWord) { stored=true;break; }
                     if(!live.same(target) && targetConfirmed(target,product,targetWord))
-                        return result(true,false,"Potwierdzono nowe połączenie: "+target.address+" / "+target.baud+" / "+target.mode+".");
+                        return finish(target,product,targetWord);
                     if(clock.now()<deadline)clock.sleep(Math.min(200,deadline-clock.now()));
                 } while(clock.now()<deadline);
                 if(!stored)return result(false,false,"h3 nie potwierdził nowej wartości po zapisie FC06. Aktywacji 3698 nie wysłano. Skopiuj raport techniczny.");
@@ -124,7 +171,7 @@ public final class CommunicationProgrammer {
             do {
                 clock.sleep(Math.min(200,Math.max(0,deadline-clock.now())));
                 if(targetConfirmed(target,product,targetWord))
-                    return result(true,false,"Potwierdzono adres "+target.address+" / "+target.baud+" / "+target.mode+".");
+                    return finish(target,product,targetWord);
             } while(clock.now()<deadline);
             if(read(live,4,1)==product && read(live,3,3)==targetWord)
                 return result(false,true,"Nowe ustawienia są zapisane w h3, ale nadal odpowiada poprzednie połączenie. Aktywacja niepotwierdzona.");
