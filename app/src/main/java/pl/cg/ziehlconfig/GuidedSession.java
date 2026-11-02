@@ -16,9 +16,9 @@ public final class GuidedSession {
     if (prefix == null || !("C".equals(prefix) || "K".equals(prefix)))
       throw new IllegalArgumentException("Wybierz oznaczenie centrali: C albo K.");
     String digits = number == null ? "" : number.trim();
-    if (!digits.matches("[0-9]{4,5}"))
+    if (!digits.matches("[0-9]+"))
       throw new IllegalArgumentException(
-          "Wpisz 4 lub 5 cyfr numeru centrali, np. 4234. Literę C/K wybierz osobno.");
+          "Wpisz numer centrali cyframi. Literę C/K wybierz osobno.");
     return prefix + digits;
   }
 

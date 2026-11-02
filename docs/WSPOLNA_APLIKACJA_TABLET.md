@@ -26,3 +26,5 @@ Testy automatyczne nie zastępują sprawdzenia na fizycznym silniku i tablecie.
 Osobna instalacja: applicationId `pl.cg.ziehlconfig.wizard`. Nazwa, logo i ikona bez zmian. Poprzednie aplikacje pozostają zainstalowane.
 
 1.1.1: wybór oznaczenia C/K przez RadioGroup (domyślnie C), osobna walidacja cyfr numeru i błąd przy polu. Testy obejmują C12345 i K12345.
+
+1.1.2: usunięto ograniczenie długości numeru centrali. Przyjmowany jest dowolny niepusty ciąg cyfr, przechowywany jako tekst z zachowaniem zer wiodących.

@@ -27,16 +27,13 @@ public final class GuidedSessionTest {
     check(GuidedSession.centralNumber("C", "12345").equals("C12345"));
     check(GuidedSession.centralNumber("K", "12345").equals("K12345"));
     check(GuidedSession.centralNumber("K", " 4234 ").equals("K4234"));
-    try {
-      GuidedSession.centralNumber("K", "123");
-      throw new AssertionError();
-    } catch (IllegalArgumentException e) {
-      check(e.getMessage().startsWith("Wpisz 4 lub 5 cyfr"));
+    for(String digits:new String[]{"1","123","123456","00012345678901234567890","9".repeat(10000)}) {
+      check(GuidedSession.centralNumber("C",digits).equals("C"+digits));
+      check(GuidedSession.centralNumber("K",digits).equals("K"+digits));
     }
     invalid(() -> GuidedSession.centralNumber("C", ""));
     invalid(() -> GuidedSession.centralNumber("C", null));
-    invalid(() -> GuidedSession.centralNumber("C", "123456"));
-    invalid(() -> GuidedSession.centralNumber("C", "123"));
+    invalid(() -> GuidedSession.centralNumber("C", "12A34"));
     invalid(() -> GuidedSession.centralNumber("X", "12345"));
     check(!GuidedSession.allConfirmed(new int[] {231, 232}, new boolean[] {true, false}));
     check(!GuidedSession.allConfirmed(new int[0], new boolean[0]));

@@ -4,9 +4,9 @@ Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa wido
 
 ## Pobieranie
 
-- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v111.apk)
-- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v111.zip)
-- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_Kreator_osobna_v111.zip)
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v112.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v112.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_Kreator_osobna_v112.zip)
 - [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.3-test/ClimaGold_CM3_Windows_TEST.zip)
 - [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v103.zip)
 
@@ -40,7 +40,7 @@ Skanowanie 1.0.3: domyślnie adresy od 247 w dół do 200, kolejno 19200/8E1, 96
 ## Tablet 1.1.0 — kreator ZIEHL-ABEGG
 
 Menu zawiera konfigurację standardową i zaawansowaną. Standardowa prowadzi przez
-numer centrali (C/K + 4–5 cyfr), typ centrali, liczbę silników, przygotowanie,
+numer centrali (C/K + numer bez limitu długości), typ centrali, liczbę silników, przygotowanie,
 kodowanie kolejnych silników i końcowy test. Do 8 silników na każdą sekcję:
 nawiew 231,233,…245; wywiew 232,234,…246. Adres 247 pozostaje dostępny ręcznie.
 Każdy silnik należy najpierw wyszukać i potwierdzić kodowanie; wynik jest zaliczany
@@ -56,3 +56,5 @@ interfejs i rzeczywiste kodowanie wymagają próby na tablecie z silnikiem.
 Kreator 1.1.0 jest teraz osobną aplikacją (`pl.cg.ziehlconfig.wizard`), instalowaną obok poprzednich wersji `.cm3` i aplikacji oryginalnej. Zachowuje nazwę „Clima Gold Ziehl-Abegg”, logo i ikonę. Nie przenosi danych poprzedniej aplikacji.
 
 Poprawka kreatora 1.1.1: osobne przyciski C i K, domyślnie C; komunikat nieprawidłowego numeru pojawia się przy polu numeru, zamiast sugerować ponowny wybór C/K. Numer 12345 jest prawidłowy dla C oraz K.
+
+1.1.2: numer centrali jest ciągiem cyfr bez limitu długości; zachowuje zera wiodące. Wymagana jest przynajmniej jedna cyfra. Pełny numer trafia do treści raportu; tylko proponowana nazwa pliku jest skracana dla zgodności z systemem plików.

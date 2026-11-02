@@ -198,7 +198,7 @@ public final class SetupActivity extends Activity {
       add(prefix);
       text("Numer centrali — same cyfry, np. 4234", 15);
       EditText number = field(central.length() > 1 ? central.substring(1) : "");
-      number.setHint("Numer: 4 lub 5 cyfr");
+      number.setHint("Numer centrali — bez limitu długości");
       number.setHintTextColor(GREY);
       text("Typ centrali", 15);
       Spinner kind = spinner("Nawiewno-wywiewna", "Nawiewna", "Wywiewna");
@@ -402,7 +402,7 @@ public final class SetupActivity extends Activity {
     i.setType("text/plain");
     i.addCategory(Intent.CATEGORY_OPENABLE);
     i.putExtra(
-        Intent.EXTRA_TITLE, "ClimaGold_" + (central.isEmpty() ? "raport" : central) + ".txt");
+        Intent.EXTRA_TITLE, "ClimaGold_" + (central.isEmpty() ? "raport" : central.substring(0, Math.min(64, central.length()))) + ".txt");
     startActivityForResult(i, EXPORT);
   }
 
