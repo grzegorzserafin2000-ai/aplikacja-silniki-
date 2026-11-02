@@ -2,8 +2,8 @@
 <resources>
     <style name="ClimaGoldTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:colorAccent">#F56916</item>
-        <item name="android:statusBarColor">#111315</item>
-        <item name="android:navigationBarColor">#111315</item>
+        <item name="android:statusBarColor">#263647</item>
+        <item name="android:navigationBarColor">#263647</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>

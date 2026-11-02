@@ -27,3 +27,5 @@ Nie przeprowadzono próby na fizycznym silniku ani odczytu wyświetlacza Carel p
 ## Logo i osobna aplikacja
 Pełne logo pochodzi z Logo_ClimaGold_duże.zip, PNG 40363×12143 px. Zachowano oryginał w branding/logo-original.png; zasoby aplikacji to techniczne eksporty tego rysunku, bez odtwarzania znaku.
 Nazwa widoczna: Clima Gold Ziehl-Abegg. Android: osobny applicationId pl.cg.ziehlconfig.cm3, osobna akcja uprawnień USB. Stara aplikacja pozostaje oddzielna. Windows: osobny katalog ClimaGold_ZIEHL_CM3; skrót ma żądaną nazwę, a kolizja z inną aplikacją jest obsługiwana przez osobny folder na pulpicie.
+
+Wygląd 1.0.1: poprzednia ikona zachowana, nagłówek logo dopasowany do #263647 i jaśniejszych paneli. Nie zmieniono protokołu ani logiki zapisu CM. Nazwa nadal Clima Gold Ziehl-Abegg.

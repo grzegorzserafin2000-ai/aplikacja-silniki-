@@ -4,11 +4,11 @@ Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa wido
 
 ## Pobieranie
 
-- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet.apk)
-- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet.zip)
-- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla.zip)
-- [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.0-test/ClimaGold_CM3_Windows_TEST.zip)
-- [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla.zip)
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v101.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v101.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_v101.zip)
+- [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.1-test/ClimaGold_CM3_Windows_TEST.zip)
+- [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v101.zip)
 
 ZIP Windows należy rozpakować przed uruchomieniem. EXE nie wymaga Pythona. Instalator źródłowy wymaga Python 3.10+ i internetu przy pierwszej instalacji. [Instrukcja Windows](windows/README_PRZECZYTAJ.txt).
 
@@ -30,3 +30,5 @@ Android: `JAVA_HOME=<JDK17> tests/run.sh` — 13 przypadków adresu i 48 asercji
 Windows: z katalogu `windows`, `python -m unittest discover -s tests -v` — 74 testy, w tym GUI. Workflow buduje EXE na Windows i uruchamia gotowy plik w trybie smoke-test.
 
 Działanie z fizycznym silnikiem i USB-RS485 nadal wymaga sprawdzenia. Program pozostaje wersją testową. Po próbie należy skopiować raport techniczny TX/RX.
+
+Wersja 1.0.1 przywraca wcześniejszą ikonę i dopasowuje logo do jednolitego, jaśniejszego tła aplikacji #263647. Zmieniono wyłącznie wygląd; nazwa i obsługa CM pozostają takie same.

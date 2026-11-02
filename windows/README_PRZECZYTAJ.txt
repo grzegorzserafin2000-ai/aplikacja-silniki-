@@ -1,7 +1,7 @@
 CLIMA GOLD - ZIEHL-ABEGG CM3 WINDOWS TEST
 
 WERSJA PRZENOSNA EXE (bez Pythona):
-Pobierz ZIP z wydania windows-cm3-v1.0.0-test na GitHub, rozpakuj calosc i uruchom
+Pobierz ZIP z wydania windows-cm3-v1.0.1-test na GitHub, rozpakuj calosc i uruchom
 ClimaGold_CM3_Windows_TEST.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
 Program nie otwiera czarnej konsoli. EXE jest niepodpisane certyfikatem wydawcy.
 
@@ -35,3 +35,5 @@ Osadzono pelne logo dostarczone przez uzytkownika. Nazwa aplikacji: Clima Gold Z
 BUDOWANIE EXE:
 Uruchom OPCJONALNIE_Zbuduj_EXE_na_Windows.bat.
 GitHub Actions buduje ten sam program na Windows i sprawdza uruchomienie gotowego EXE.
+
+WYGLAD 1.0.1: przywrocono wczesniejsza ikone, naglowek logo ma jednolite tlo aplikacji #263647. Interfejs ma jasniejsze panele. Nazwa oraz osobna instalacja pozostaja takie same.

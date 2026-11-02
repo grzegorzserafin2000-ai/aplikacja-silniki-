@@ -7,3 +7,6 @@
 Eksport: `java -Xmx3g branding/PrepareLogo.java branding/logo-original.png /tmp/logo-export`. Pełny obraz służy nagłówkom; symbol z białym marginesem służy ikonom. ICO Windows wyeksportowano przez ImageMagick z małego PNG ikony: `magick climagold_mark.png -define icon:auto-resize=256,128,64,48,32,16 climagold.ico`.
 
 Oryginał nie jest ładowany na tablecie ani w EXE, dzięki czemu ogromny rozmiar źródłowego obrazu nie obciąża uruchomienia aplikacji.
+
+## Wygląd 1.0.1
+Nagłówek eksportuje się poleceniem `java -Xmx3g branding/PrepareLogo.java branding/logo-original.png /tmp/logo-export "#263647"`. Eksport dopasowuje białe obszary do tła interfejsu, zachowując płaskie szare i pomarańczowe litery. Zasób nagłówka ma ten sam kolor tła co widok aplikacji. Wcześniejsze ikony Android i Windows zostały przywrócone z commita 37590bb; nie zastępuje się ich ikoną generowaną przez eksporter logo.

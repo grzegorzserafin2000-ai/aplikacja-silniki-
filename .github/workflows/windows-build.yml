@@ -62,7 +62,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          $tag = 'windows-cm3-v1.0.0-test'
+          $tag = 'windows-cm3-v1.0.1-test'
           gh release view $tag *> $null
           if ($LASTEXITCODE -ne 0) {
             gh release create $tag --target $env:GITHUB_SHA --title 'Clima Gold Ziehl-Abegg - Windows CM3' --prerelease --notes-file dist/release-notes.txt

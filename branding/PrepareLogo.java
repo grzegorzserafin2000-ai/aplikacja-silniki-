@@ -24,15 +24,35 @@ public final class PrepareLogo {
         }
         if(maxX<minX)throw new IllegalStateException("Logo has no visible content");
         BufferedImage full=scale(source.getSubimage(minX,minY,maxX-minX+1,maxY-minY+1),1200);
-        File out=new File(args[1]);out.mkdirs();ImageIO.write(full,"png",new File(out,"climagold_full.png"));
+        File out=new File(args[1]);out.mkdirs();
+        // Match the application's theme when exporting a header resource.
+        if(args.length>2) {
+            Color background=Color.decode(args[2]);
+            for(int y=0;y<full.getHeight();y++) for(int x=0;x<full.getWidth();x++) {
+                int pixel=full.getRGB(x,y),red=(pixel>>>16)&255,green=(pixel>>>8)&255,blue=pixel&255;
+                double alpha;int fr,fg,fb;
+                if(red-green>15 && red-blue>15) {
+                    alpha=(255-blue)/255.0;fr=255;fg=102;fb=0;
+                } else {
+                    alpha=Math.max(0,Math.min(1,(255-(red+green+blue)/3.0)/127.0));
+                    fr=fg=fb=128;
+                }
+                int rr=(int)Math.round(fr*alpha+background.getRed()*(1-alpha));
+                int gg=(int)Math.round(fg*alpha+background.getGreen()*(1-alpha));
+                int bb=(int)Math.round(fb*alpha+background.getBlue()*(1-alpha));
+                full.setRGB(x,y,0xFF000000|(rr<<16)|(gg<<8)|bb);
+            }
+        }
+        ImageIO.write(full,"png",new File(out,"climagold_full.png"));
         // First blank column after the leading orange symbol separates it from the wordmark.
+        BufferedImage originalSmall=scale(source.getSubimage(minX,minY,maxX-minX+1,maxY-minY+1),1200);
         int end=1;
-        for(int x=1;x<full.getWidth();x++) {
-            boolean any=false;for(int y=0;y<full.getHeight();y++)if(ink(full.getRGB(x,y))){any=true;break;}
+        for(int x=1;x<originalSmall.getWidth();x++) {
+            boolean any=false;for(int y=0;y<full.getHeight();y++)if(ink(originalSmall.getRGB(x,y))){any=true;break;}
             if(!any){end=x;break;}
         }
         if(end<20 || end>full.getWidth()/3)throw new IllegalStateException("Cannot identify original logo symbol");
-        BufferedImage mark=full.getSubimage(0,0,end,full.getHeight());
+        BufferedImage mark=scale(source.getSubimage(minX,minY,maxX-minX+1,maxY-minY+1),1200).getSubimage(0,0,end,full.getHeight());
         BufferedImage icon=new BufferedImage(512,512,BufferedImage.TYPE_INT_ARGB);
         Graphics2D g=icon.createGraphics();g.setColor(Color.WHITE);g.fillRect(0,0,512,512);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);

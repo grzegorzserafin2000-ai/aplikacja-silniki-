@@ -9,7 +9,7 @@ from scan_service import auto_scan,manual_scan,validate_range
 from serial_service import ports
 from simple_write import program_one_click,eligible
 
-BG='#111315'; PANEL='#202328'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#B9BEC4'
+BG='#263647'; PANEL='#33485C'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#C6D0DA'
 
 class SimpleApp(tk.Tk):
     def __init__(self):
@@ -36,7 +36,7 @@ class SimpleApp(tk.Tk):
     def label(self,p,text,size=12,color=FG,bold=False):
         return tk.Label(p,text=text,bg=p.cget('bg'),fg=color,font=('Segoe UI',size,'bold' if bold else 'normal'),anchor='w',justify='left')
     def btn(self,p,label,fn,orange=True):
-        return tk.Button(p,text=label,command=fn,bg=ORANGE if orange else '#41454B',fg='white',
+        return tk.Button(p,text=label,command=fn,bg=ORANGE if orange else '#40576C',fg='white',
             font=('Segoe UI',12,'bold'),relief='flat',cursor='hand2',padx=14,pady=9)
     def panel(self,p):
         f=tk.Frame(p,bg=PANEL,padx=18,pady=15)
@@ -54,7 +54,7 @@ class SimpleApp(tk.Tk):
         top=tk.Frame(outer,bg=BG);top.pack(fill='x',pady=(0,17))
         try:
             self.icon=tk.PhotoImage(file=str(resource_path('assets/climagold_full.png'))).subsample(3,3)
-            tk.Label(top,image=self.icon,bg='white',padx=12,pady=8).pack(anchor='w')
+            tk.Label(top,image=self.icon,bg=BG,padx=12,pady=8).pack(anchor='w')
         except tk.TclError:
             self.label(top,'Clima Gold',24,bold=True).pack(anchor='w')
         self.label(top,'ZIEHL-ABEGG  •  Konfigurator',11,ORANGE,True).pack(anchor='w',pady=(5,0))

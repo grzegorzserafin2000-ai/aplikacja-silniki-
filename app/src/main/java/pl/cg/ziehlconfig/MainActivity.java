@@ -53,14 +53,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class MainActivity extends Activity {
     private static final String USB_ACTION = "pl.cg.ziehlconfig.cm3.USB_PERMISSION";
-    private static final int NAVY = Color.rgb(21, 23, 25);
+    private static final int NAVY = Color.rgb(38, 54, 71);
     private static final int BLUE = Color.rgb(245, 105, 22);
-    private static final int LIGHT = Color.rgb(17, 19, 21);
-    private static final int GREY = Color.rgb(169, 175, 182);
+    private static final int LIGHT = Color.rgb(38, 54, 71);
+    private static final int GREY = Color.rgb(198, 208, 218);
     private static final int GREEN = Color.rgb(111, 214, 159);
-    private static final int CARD = Color.rgb(32, 35, 39);
-    private static final int FIELD = Color.rgb(43, 47, 53);
-    private static final int BORDER = Color.rgb(62, 67, 73);
+    private static final int CARD = Color.rgb(51, 72, 92);
+    private static final int FIELD = Color.rgb(64, 87, 108);
+    private static final int BORDER = Color.rgb(89, 111, 131);
     private static final int WHITE = Color.rgb(247, 248, 250);
 
     private UsbManager usbManager;
@@ -261,7 +261,7 @@ public final class MainActivity extends Activity {
         ImageView logo=new ImageView(this);
         logo.setImageResource(R.drawable.climagold_full);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        logo.setBackgroundColor(WHITE);
+        logo.setBackgroundColor(LIGHT);
         logo.setPadding(dp(8),dp(8),dp(8),dp(8));
         logo.setContentDescription("Clima Gold");
         top.addView(logo,new LinearLayout.LayoutParams(-1,dp(96)));
@@ -457,7 +457,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0.1 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -678,7 +678,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.1\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
