@@ -22,3 +22,5 @@ Po ponownym uruchomieniu aplikacji należy powtórzyć końcowy test.
 Referencyjny APK dostarczył układ kreatora, nie komendy dla ZIEHL. W szczególności
 nie przeniesiono adresów 221/222 ani rejestrów drugiego producenta.
 Testy automatyczne nie zastępują sprawdzenia na fizycznym silniku i tablecie.
+
+Osobna instalacja: applicationId `pl.cg.ziehlconfig.wizard`. Nazwa, logo i ikona bez zmian. Poprzednie aplikacje pozostają zainstalowane.

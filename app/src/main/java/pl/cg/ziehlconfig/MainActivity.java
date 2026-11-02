@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * controller codes; writing remains locked for unverified device families.
  */
 public final class MainActivity extends Activity {
-    private static final String USB_ACTION = "pl.cg.ziehlconfig.cm3.USB_PERMISSION";
+    private static final String USB_ACTION = "pl.cg.ziehlconfig.wizard.USB_PERMISSION";
     private static final int NAVY = Color.rgb(0, 0, 0);
     private static final int BLUE = Color.rgb(245, 105, 22);
     private static final int LIGHT = Color.rgb(0, 0, 0);

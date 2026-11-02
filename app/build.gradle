@@ -4,10 +4,10 @@ android {
     namespace 'pl.cg.ziehlconfig'
     compileSdk 35
     defaultConfig {
-        applicationId 'pl.cg.ziehlconfig.cm3'
+        applicationId 'pl.cg.ziehlconfig.wizard'
         minSdk 26
         targetSdk 35
-        versionCode 5
+        versionCode 1
         versionName '1.1.0-cm3-test'
     }
     compileOptions {
