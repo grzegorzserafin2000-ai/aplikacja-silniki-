@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths: ['windows/**', '.github/workflows/windows-build.yml']
   workflow_dispatch:
+concurrency:
+  group: windows-cm3-release
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -34,12 +37,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify packaged EXE starts and address is editable
         run: |
+          python verify_exe_icon.py dist/ClimaGold_ZiehlAbegg_102.exe assets/climagold_dark.ico
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $report = Join-Path $PWD 'smoke-exe.json'
           $process = Start-Process -FilePath 'dist/ClimaGold_ZiehlAbegg_102.exe' -ArgumentList @('--smoke-test','--smoke-report',$report) -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "EXE failed with exit code $($process.ExitCode)" }
           if (-not (Test-Path $report)) { throw 'EXE smoke report is missing' }
           $data = Get-Content $report -Raw | ConvertFrom-Json
-          if (-not $data.gui_started -or -not $data.editable_address_after_preset -or -not $data.factory_communication_preset -or -not $data.logo_loaded) { throw 'EXE smoke check failed' }
+          if (-not $data.gui_started -or -not $data.editable_address_after_preset -or -not $data.factory_communication_preset -or -not $data.logo_loaded -or -not $data.dark_icon_loaded) { throw 'EXE smoke check failed' }
           $tokens = $null
           $parseErrors = $null
           $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'Instaluj_na_pulpicie.ps1'),[ref]$tokens,[ref]$parseErrors)
@@ -70,3 +75,5 @@ jobs:
           }
           gh release upload $tag dist/ClimaGold_CM3_Windows_TEST.zip dist/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
+          gh release edit $tag --notes-file dist/release-notes.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed' }

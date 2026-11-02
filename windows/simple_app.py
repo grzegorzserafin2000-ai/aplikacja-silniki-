@@ -19,6 +19,8 @@ class SimpleApp(tk.Tk):
         self.configure(bg=BG)
         try:
             self.iconbitmap(str(resource_path('assets/climagold_dark.ico')))
+        except tk.TclError:pass
+        try:
             self._window_icon=tk.PhotoImage(file=str(resource_path('assets/climagold_mark.png')))
             self.iconphoto(True,self._window_icon)
         except tk.TclError:pass
