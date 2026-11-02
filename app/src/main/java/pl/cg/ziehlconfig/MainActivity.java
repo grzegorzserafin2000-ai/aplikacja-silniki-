@@ -456,7 +456,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG TEST 0.15 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG TEST 0.16 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -666,7 +666,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG Android TEST 0.15\n")
+            report.append("Clima Gold ZIEHL-ABEGG Android TEST 0.16\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")

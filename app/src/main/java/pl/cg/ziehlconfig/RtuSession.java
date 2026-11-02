@@ -61,7 +61,8 @@ public final class RtuSession {
             System.arraycopy(chunk,0,data,count,n);count+=n;
             ModbusRtu.Reply reply=ModbusRtu.parse(data,count,slave,function,register,value);
             if(reply!=null) {
-                trace.accept(reply.successful()?"REPLY OK (FC06 requires readback; echo is indistinguishable)":"EXCEPTION "+reply.exception);
+                trace.accept(!reply.successful()?"EXCEPTION "+reply.exception:
+                        function==6?"FC06 ACK (wymaga odczytu kontrolnego; możliwe echo)":"READ OK");
                 return reply;
             }
         }

@@ -21,7 +21,10 @@ public final class CommunicationTest {
         boolean ack=true,rejectWrite=false,pinAck=true,ignoreWrite=false,ignoreActivation=false,immediateOnStore=false;
         int targetProduct=-1;
         int speed;String mode;
+        boolean aliasReads=false;
         int liveAddress=231,liveBaud=9600;String liveMode="8N2";
+        long pinAt=-1,h3At=-1;
+        final List<String> writeModes=new ArrayList<>();
         final List<String> writes=new ArrayList<>();
         final List<Integer> writeAddresses=new ArrayList<>();
         Motor(Clock c){clock=c;}
@@ -34,8 +37,14 @@ public final class CommunicationTest {
             int active=activated?target.address:liveAddress;
             int activeBaud=activated?target.baud:liveBaud;
             String activeMode=activated?target.mode:liveMode;
-            if(slave!=active || speed!=activeBaud || !mode.equals(activeMode)) {clock.sleep(timeout);return null;}
+            boolean alias=aliasReads && !activated && mode.equals("8E1") && activeMode.equals("8N2");
+            if(slave!=active || speed!=activeBaud || (!mode.equals(activeMode) && !alias)) {clock.sleep(timeout);return null;}
             if(fn==6) {
+                // Hardware regression: wrong framing may allow reads/PIN echo yet reject h3.
+                if(alias && reg==3){clock.sleep(timeout);return null;}
+                writeModes.add(mode);
+                if(reg==0 && value==1234)pinAt=clock.time;
+                if(reg==3)h3At=clock.time;
                 writes.add(reg+":"+value);writeAddresses.add(slave);
                 if(reg==0 && value==1234 && !pinAck)return null;
                 if(reg==3 && rejectWrite)return new ModbusRtu.Reply(slave,0x86,-1,3);
@@ -121,6 +130,21 @@ public final class CommunicationTest {
         c=new Clock();m=new Motor(c);m.storeDelay=10000;
         r=program(m,0x0100,OLD,TARGET);
         check(!r.success && m.writes.size()==2,"Unconfirmed h3 after observation budget must not activate");
+        c=new Clock();m=new Motor(c);m.aliasReads=true;
+        r=new CommunicationProgrammer(m,c).run(new CommunicationProgrammer.Settings(231,9600,"8E1"),
+                0x0100,OLD,TARGET);
+        check(r.success,"Report regression: E1 reads work but N2 is required for h3 write");
+        check(m.writeModes.stream().allMatch(format->format.equals("8N2")),"Use freshly verified h3 framing for writes");
+        check(m.h3At-m.pinAt>=500,"PIN processing pause precedes h3 write");
+        c=new Clock();m=new Motor(c);m.liveMode="8E1";
+        r=new CommunicationProgrammer(m,c).run(new CommunicationProgrammer.Settings(231,9600,"8E1"),
+                0x0100,OLD,TARGET);
+        check(r.success && m.writeModes.stream().allMatch(format->format.equals("8E1")),
+                "Unresponsive stored framing must never be chosen for writes");
+        c=new Clock();m=new Motor(c);m.aliasReads=true;
+        m.configure(9600,"8E1");
+        check(m.transaction(231,6,3,TARGET,1100)==null && m.word==OLD,
+                "Fixture reproduces unchanged h3 and missing FC06 reply with wrong framing");
         byte[] known={1,3,0,0,0,10};
         check(ModbusRtu.crc16(known,known.length)==0xCDC5,"Published MODBUS CRC vector");
         check(ModbusRtu.configValue(231,9600,"8N2")==0xE713,"CAREL bit layout");

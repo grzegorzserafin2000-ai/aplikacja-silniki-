@@ -67,6 +67,22 @@ public final class CommunicationProgrammer {
         try {
             if(read(live,4,1)!=product || read(live,3,3)!=previousWord)
                 return result(false,false,"Dane silnika zmieniły się. Wykryj go ponownie.");
+            Settings savedLink=Settings.stored(previousWord);
+            // Some adapters can deliver valid reads on a mismatched framing.
+            // Prefer h3 framing ONLY after fresh ID+h3 readback on the same address.
+            // Never select the stored address here: it may await activation.
+            if(savedLink.address==live.address && !savedLink.same(live)) {
+                log.append("Rozbieżność trybu: wykryty ").append(live.baud).append('/').append(live.mode)
+                   .append(", h3 ").append(savedLink.baud).append('/').append(savedLink.mode).append('\n');
+                if(read(savedLink,4,1)==product && read(savedLink,3,3)==previousWord) {
+                    live=savedLink;
+                    log.append("Tryb z h3 potwierdzony świeżym odczytem i1+h3; używam go do zapisu.\n");
+                } else {
+                    log.append("Tryb z h3 nie odpowiedział; ponownie sprawdzam wykryte połączenie.\n");
+                    if(read(live,4,1)!=product || read(live,3,3)!=previousWord)
+                        return result(false,false,"Nie potwierdzono stabilnego trybu komunikacji. Bez zapisu.");
+                }
+            }
             if(previousWord==targetWord && live.same(target))
                 return result(true,false,"Silnik już ma podane ustawienia. Bez zapisu.");
             if(previousWord!=targetWord) {
@@ -74,22 +90,28 @@ public final class CommunicationProgrammer {
                 ModbusRtu.Reply pin=request(live,6,0,1234,900);
                 if(pin==null || !pin.successful())
                     return result(false,false,"Brak potwierdzenia PIN 1234. Nie wysłano zapisu h3.");
+                // PIN acknowledgement need not mean firmware has completed access processing.
+                // A fixed pause is a compatibility measure, not a claim about the failure cause.
+                clock.sleep(500);
+                log.append("PIN 1234: odpowiedź odebrana; 500 ms przed zapisem h3.\n");
                 ModbusRtu.Reply saved=null;
                 try { saved=request(live,6,3,targetWord,1100); }
                 catch(IOException e) { log.append("Zapis h3: ").append(e.getMessage()).append('\n'); }
                 if(saved!=null && !saved.successful())
                     return result(false,false,"Silnik odrzucił zapis h3 (kod "+saved.exception+").");
-                log.append("Zapis h3 wysłany raz; odczyty kontrolne do 5 s.\n");
+                log.append("h3 FC06 wysłany raz: ").append(saved==null?"brak ACK":"ACK")
+                   .append("; odczyty kontrolne do 5 s.\n");
                 long deadline=clock.now()+5000;
                 boolean stored=false;
                 do {
                     int raw=read(live,3,3);
+                    log.append("Odczyt h3: ").append(raw<0?"brak odpowiedzi":String.format(java.util.Locale.US,"0x%04X",raw)).append('\n');
                     if(raw==targetWord) { stored=true;break; }
                     if(!live.same(target) && targetConfirmed(target,product,targetWord))
                         return result(true,false,"Potwierdzono nowe połączenie: "+target.address+" / "+target.baud+" / "+target.mode+".");
                     if(clock.now()<deadline)clock.sleep(Math.min(200,deadline-clock.now()));
                 } while(clock.now()<deadline);
-                if(!stored)return result(false,false,"Nie potwierdzono zapisu h3. Aktywacji nie wysłano; nie ponawiaj zapisu w ciemno.");
+                if(!stored)return result(false,false,"h3 nie potwierdził nowej wartości po zapisie FC06. Aktywacji 3698 nie wysłano. Skopiuj raport techniczny.");
             } else log.append("h3 już zawiera cel; pominięto PIN 1234 i zapis h3.\n");
             // Activation is sent once on the ACTIVE link, not the address stored in h3.
             attempted=true;

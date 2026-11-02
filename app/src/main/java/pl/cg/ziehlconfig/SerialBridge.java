@@ -87,6 +87,8 @@ public final class SerialBridge implements AutoCloseable {
                 configuredLink.parity==link.parity && configuredLink.stop==link.stop)return;
         port.setParameters(link.baud, 8, link.stop, link.parity);
         configuredLink=link;
+        // Allow USB UART configuration and pending receive data to settle.
+        android.os.SystemClock.sleep(100);
         session.baud(link.baud);
         trace("LINK "+link.label);
     }
