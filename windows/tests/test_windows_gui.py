@@ -47,3 +47,19 @@ class GuiTests(unittest.TestCase):
  def test_close_during_write_keeps_window(self):
   self.app.detected=self.device();self.app.busy=True;self.app.on_close()
   self.assertTrue(self.app.winfo_exists())
+
+ @patch('simple_app.messagebox.showinfo')
+ def test_factory_button_restores_communication_fields(self,_):
+  self.app.select_factory()
+  target=decode_h3(self.app.target_word())
+  self.assertEqual((target.address,target.baud,target.mode),(247,19200,'8E1'))
+  self.assertEqual(self.app.factory_btn.winfo_manager(),'pack')
+ @patch('simple_app.messagebox.showinfo')
+ @patch('simple_app.program_one_click')
+ def test_factory_selection_does_not_write(self,program,_):
+  self.app.select_factory();program.assert_not_called()
+ @patch('simple_app.messagebox.showinfo')
+ def test_factory_is_blocked_while_busy(self,_):
+  self.app.busy=True;before=self.app.target_word();self.app.select_factory()
+  self.assertEqual(self.app.target_word(),before)
+  self.app.update_ui();self.assertEqual(str(self.app.factory_btn.cget('state')),'disabled')

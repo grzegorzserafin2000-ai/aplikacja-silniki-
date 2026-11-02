@@ -1,8 +1,8 @@
-CLIMA GOLD - ZIEHL-ABEGG WINDOWS 2.6 TEST
+CLIMA GOLD - ZIEHL-ABEGG WINDOWS 2.7 TEST
 
 WERSJA PRZENOSNA EXE (bez Pythona):
-Pobierz ZIP z wydania windows-v2.6.0-test na GitHub, rozpakuj calosc i uruchom
-ClimaGold_ZIEHL_Windows_2_6_TEST.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
+Pobierz ZIP z wydania windows-v2.7.0-test na GitHub, rozpakuj calosc i uruchom
+ClimaGold_ZIEHL_Windows_2_7_TEST.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
 Program nie otwiera czarnej konsoli. EXE jest niepodpisane certyfikatem wydawcy.
 
 PAKIET ZRODLOWY / INSTALACJA ZE SKROTEM:
@@ -13,7 +13,10 @@ Aplikacja instaluje sie w LOCALAPPDATA\Programs\ClimaGold_ZIEHL.
 Nie usuwa ani nie odinstalowuje starszej aplikacji. Aktualizuje jej skrot.
 Sterownik USB-RS485 musi byc zainstalowany; port powinien byc widoczny w Menedzerze urzadzen.
 
-ZMIANY 2.6:
+ZMIANY 2.7:
+- Przywrocono widoczny przycisk USTAWIENIA FABRYCZNE: 247 / 19200 / Even / 1.
+  Przycisk wypelnia pola; zapis nastepuje dopiero po wybraniu ZMIEN PARAMETRY.
+  Nie jest to pelny reset fabryczny silnika.
 - Zawsze widoczne pole adresu. Wpisana liczba ma pierwszenstwo po wybraniu Nawiew/Wywiew.
 - Szczegoly silnika, aktywna i zapisana komunikacja oraz firmware na glownym ekranie.
 - Kopiowanie i zapis raportu TXT z ramkami TX/RX.

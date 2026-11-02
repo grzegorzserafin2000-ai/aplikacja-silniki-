@@ -20,11 +20,20 @@ def main():
             from protocol import decode_h3
             assert decode_h3(app.target_word()).address == 230
             assert app.manual_frame.winfo_manager() == 'pack'
+            from tkinter import messagebox
+            original_info = messagebox.showinfo
+            try:
+                messagebox.showinfo = lambda *args, **kwargs: None
+                app.factory_btn.invoke()
+            finally:
+                messagebox.showinfo = original_info
+            factory = decode_h3(app.target_word())
+            assert (factory.address, factory.baud, factory.mode) == (247, 19200, '8E1')
             app.destroy()
             if '--smoke-report' in sys.argv:
                 target = Path(sys.argv[sys.argv.index('--smoke-report') + 1])
-                target.write_text(json.dumps({'version': '2.6 TEST', 'gui_started': True,
-                    'editable_address_after_preset': True}), encoding='utf-8')
+                target.write_text(json.dumps({'version': '2.7 TEST', 'gui_started': True,
+                    'editable_address_after_preset': True, 'factory_communication_preset': True}), encoding='utf-8')
             return 0
         app.mainloop()
         return 0

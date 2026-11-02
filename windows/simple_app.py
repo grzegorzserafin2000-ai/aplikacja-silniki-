@@ -14,7 +14,7 @@ BG='#111315'; PANEL='#202328'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#B9BEC4'
 class SimpleApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('Clima Gold – ZIEHL-ABEGG 2.6 TEST')
+        self.title('Clima Gold – ZIEHL-ABEGG 2.7 TEST')
         self.geometry(f'740x{min(840,self.winfo_screenheight()-100)}');self.minsize(620,560)
         self.configure(bg=BG)
         try: self.iconbitmap(str(resource_path('assets/climagold.ico')))
@@ -58,7 +58,7 @@ class SimpleApp(tk.Tk):
         except Exception:pass
         header=tk.Frame(top,bg=BG);header.pack(side='left')
         self.label(header,'CLIMA GOLD',24,bold=True).pack(anchor='w')
-        self.label(header,'ZIEHL-ABEGG  •  Windows 2.6 TEST',11,ORANGE,True).pack(anchor='w')
+        self.label(header,'ZIEHL-ABEGG  •  Windows 2.7 TEST',11,ORANGE,True).pack(anchor='w')
 
         a=self.panel(outer)
         self.label(a,'1. Wykryj silnik',18,bold=True).pack(anchor='w',pady=(0,10))
@@ -89,6 +89,8 @@ class SimpleApp(tk.Tk):
         self.wywiew_btn=self.btn(shortcuts,'WYWIEW 232',lambda:self.apply_preset(232))
         self.wywiew_btn.pack(side='left',fill='x',expand=True,padx=(4,0))
         self.label(b,'Skróty: 9600 / None / 2. Adres poniżej zawsze można edytować.',10,MUTED).pack(anchor='w',pady=(8,10))
+        self.factory_btn=self.btn(b,'USTAWIENIA FABRYCZNE — 247 / 19200 / Even / 1',self.select_factory,False)
+        self.factory_btn.pack(fill='x',pady=(0,8))
         self.manual_frame=tk.Frame(b,bg=PANEL)
         for lab,var,options in [('Adres',self.manual_addr,None),('Baudrate',self.manual_baud,['4800','9600','19200']),
                                  ('Parity',self.manual_parity,['None','Even','Odd']),('Stop bits',self.manual_stop,['1','2'])]:
@@ -138,6 +140,15 @@ class SimpleApp(tk.Tk):
         if self.busy:return
         self.manual_addr.set(str(address));self.manual_baud.set('9600')
         self.manual_parity.set('None');self.manual_stop.set('2')
+    def select_factory(self):
+        if self.busy:return
+        self.manual_addr.set('247');self.manual_baud.set('19200')
+        self.manual_parity.set('Even');self.manual_stop.set('1')
+        self.status.set('Ustawiono fabryczną komunikację 247 / 19200 / Even / 1. Aby zapisać, użyj „ZMIEŃ PARAMETRY”.')
+        messagebox.showinfo('Ustawienia fabryczne komunikacji',
+            'Przygotowano: 247 / 19200 / Even / 1.\n\n'
+            'Nie wysłano żadnego zapisu. To ustawienia komunikacji, nie pełny reset silnika.\n'
+            'Zapis wykonasz przyciskiem „ZMIEŃ PARAMETRY”.')
     def target_word(self):
         return encode_h3(int(self.manual_addr.get()),int(self.manual_baud.get()),
                 '8'+{'None':'N','Even':'E','Odd':'O'}[self.manual_parity.get()]+self.manual_stop.get())
@@ -174,7 +185,7 @@ class SimpleApp(tk.Tk):
         self.port_changed()
     def update_ui(self):
         self.change_btn.config(state='disabled' if self.busy or not self.detected else 'normal')
-        for button in (self.search_btn,self.refresh_btn,self.nawiew_btn,self.wywiew_btn,self.manual_search_btn):
+        for button in (self.search_btn,self.refresh_btn,self.nawiew_btn,self.wywiew_btn,self.factory_btn,self.manual_search_btn):
             button.config(state='disabled' if self.busy else 'normal')
         self.port.config(state='disabled' if self.busy else 'readonly')
         self.stop_btn.config(state='normal' if self.busy and self.detected is None else 'disabled')
@@ -246,7 +257,7 @@ class SimpleApp(tk.Tk):
                         self.manual_addr.set(str(x.active_address));self.manual_baud.set(str(x.baud))
                         self.manual_parity.set({'N':'None','E':'Even','O':'Odd'}[x.parity]);self.manual_stop.set(str(x.stopbits))
                     self.describe()
-                    self.log=f'Clima Gold Windows 2.6 TEST\nSkanowanie: {metrics}\n'+self.device_details.get('1.0','end').strip()
+                    self.log=f'Clima Gold Windows 2.7 TEST\nSkanowanie: {metrics}\n'+self.device_details.get('1.0','end').strip()
                     if x:messagebox.showinfo('Wykryto silnik',f'Adres: {x.active_address}\nPołączenie: {x.baud} / {x.parity} / {x.stopbits}')
                 elif k=='programmed':
                     self.log=x.details

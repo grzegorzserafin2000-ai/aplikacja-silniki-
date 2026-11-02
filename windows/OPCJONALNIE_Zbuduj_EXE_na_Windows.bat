@@ -13,10 +13,10 @@ if errorlevel 1 goto failed
 "%BUILD_PY%" -m unittest discover -s tests -v
 if errorlevel 1 goto failed
 "%BUILD_PY%" -m PyInstaller --clean --noconfirm --onefile --windowed ^
- --name ClimaGold_ZIEHL_Windows_2_6_TEST --icon assets\climagold.ico ^
+ --name ClimaGold_ZIEHL_Windows_2_7_TEST --icon assets\climagold.ico ^
  --add-data "assets;assets" --hidden-import serial.tools.list_ports launcher.pyw
 if errorlevel 1 goto failed
-echo Gotowe: dist\ClimaGold_ZIEHL_Windows_2_6_TEST.exe
+echo Gotowe: dist\ClimaGold_ZIEHL_Windows_2_7_TEST.exe
 pause
 exit /b 0
 :failed

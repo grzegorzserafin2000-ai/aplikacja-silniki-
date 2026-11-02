@@ -31,7 +31,7 @@ def program_one_click(d, target, progress=lambda msg: None, *, clock=None):
         raise ModbusError('Niepotwierdzona obsługa docelowej prędkości.')
     import serial
     clock = clock or time
-    log = [f'Clima Gold Windows 2.6 TEST; aktywny {d.active_info if hasattr(d,"active_info") else d.active_address}; h3=0x{d.raw_h3:04X}',
+    log = [f'Clima Gold Windows 2.7 TEST; aktywny {d.active_info if hasattr(d,"active_info") else d.active_address}; h3=0x{d.raw_h3:04X}',
            f'Cel {dest.address} / {dest.baud} / {dest.mode} / 0x{target:04X}']
     attempted = False
     live = (d.active_address, d.baud, d.parity, d.stopbits)

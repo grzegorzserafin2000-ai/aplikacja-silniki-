@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 function Pokaz([string]$text, [string]$icon='Information') {
-    [System.Windows.Forms.MessageBox]::Show($text, 'Clima Gold Windows 2.6 TEST', 'OK', $icon) | Out-Null
+    [System.Windows.Forms.MessageBox]::Show($text, 'Clima Gold Windows 2.7 TEST', 'OK', $icon) | Out-Null
 }
 try {
     $source = $PSScriptRoot
@@ -48,7 +48,7 @@ try {
     $shortcut.Arguments = '"' + (Join-Path $dest 'launcher.pyw') + '"'
     $shortcut.WorkingDirectory = $dest
     $shortcut.IconLocation = (Join-Path $assets 'climagold.ico') + ',0'
-    $shortcut.Description = 'Clima Gold Windows 2.6 TEST'
+    $shortcut.Description = 'Clima Gold Windows 2.7 TEST'
     $shortcut.Save()
     Pokaz 'Zainstalowano. Uruchom skrot Clima Gold - ZIEHL-ABEGG na pulpicie. Program otwiera sie bez czarnej konsoli.'
 } catch {
