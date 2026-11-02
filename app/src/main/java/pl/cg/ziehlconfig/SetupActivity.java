@@ -182,8 +182,21 @@ public final class SetupActivity extends Activity {
     if (step == 0) {
       text("Dane centrali", 20);
       text("Oznaczenie centrali", 15);
-      Spinner prefix = spinner("C", "K");
-      prefix.setSelection(central.startsWith("K") ? 1 : 0);
+      RadioGroup prefix = new RadioGroup(this);
+      prefix.setOrientation(RadioGroup.HORIZONTAL);
+      RadioButton c = new RadioButton(this);
+      c.setId(View.generateViewId());
+      c.setText("C");
+      c.setTextColor(Color.WHITE);
+      RadioButton k = new RadioButton(this);
+      k.setId(View.generateViewId());
+      k.setText("K");
+      k.setTextColor(Color.WHITE);
+      prefix.addView(c, new RadioGroup.LayoutParams(0, dp(56), 1));
+      prefix.addView(k, new RadioGroup.LayoutParams(0, dp(56), 1));
+      prefix.check(central.startsWith("K") ? k.getId() : c.getId());
+      add(prefix);
+      text("Numer centrali — same cyfry, np. 4234", 15);
       EditText number = field(central.length() > 1 ? central.substring(1) : "");
       number.setHint("Numer: 4 lub 5 cyfr");
       number.setHintTextColor(GREY);
@@ -196,7 +209,8 @@ public final class SetupActivity extends Activity {
             try {
               String nextCentral =
                   GuidedSession.centralNumber(
-                      prefix.getSelectedItem().toString(), number.getText().toString().trim());
+                      prefix.getCheckedRadioButtonId() == k.getId() ? "K" : "C",
+                      number.getText().toString());
               int nextType = kind.getSelectedItemPosition();
               if (!central.equals(nextCentral) || type != nextType) {
                 planned = new int[0];
@@ -210,8 +224,9 @@ public final class SetupActivity extends Activity {
               step = 1;
               save();
               render();
-            } catch (Exception e) {
-              message(e.getMessage());
+            } catch (IllegalArgumentException e) {
+              number.setError(e.getMessage());
+              number.requestFocus();
             }
           });
     } else if (step == 1) {
