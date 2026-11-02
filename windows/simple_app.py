@@ -9,7 +9,7 @@ from scan_service import auto_scan,manual_scan,validate_range
 from serial_service import ports
 from simple_write import program_one_click,eligible
 
-BG='#263647'; PANEL='#33485C'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#C6D0DA'
+BG='#000000'; PANEL='#161616'; ORANGE='#F46A17'; FG='#F9F9FA'; MUTED='#C6D0DA'
 
 class SimpleApp(tk.Tk):
     def __init__(self):
@@ -17,8 +17,11 @@ class SimpleApp(tk.Tk):
         self.title('Clima Gold Ziehl-Abegg')
         self.geometry(f'740x{min(840,self.winfo_screenheight()-100)}');self.minsize(620,560)
         self.configure(bg=BG)
-        try: self.iconbitmap(str(resource_path('assets/climagold.ico')))
-        except Exception: pass
+        try:
+            self.iconbitmap(str(resource_path('assets/climagold_dark.ico')))
+            self._window_icon=tk.PhotoImage(file=str(resource_path('assets/climagold_mark.png')))
+            self.iconphoto(True,self._window_icon)
+        except tk.TclError:pass
         self.events=queue.Queue();self.stop=threading.Event();self.busy=False;self.detected=None
         self.com=tk.StringVar();self.choice=tk.StringVar(value='NAWIEW  •  231')
         self.status=tk.StringVar(value='Podłącz jeden silnik i kliknij WYKRYJ SILNIK')
@@ -36,8 +39,32 @@ class SimpleApp(tk.Tk):
     def label(self,p,text,size=12,color=FG,bold=False):
         return tk.Label(p,text=text,bg=p.cget('bg'),fg=color,font=('Segoe UI',size,'bold' if bold else 'normal'),anchor='w',justify='left')
     def btn(self,p,label,fn,orange=True):
-        return tk.Button(p,text=label,command=fn,bg=ORANGE if orange else '#40576C',fg='white',
-            font=('Segoe UI',12,'bold'),relief='flat',cursor='hand2',padx=14,pady=9)
+        normal=ORANGE if orange else '#252525'
+        hover='#FF8A36' if orange else '#454545'
+        pressed='#FFBC5E'
+        b=tk.Button(p,text=label,bg=normal,fg='white',activebackground=hover,activeforeground='white',
+            disabledforeground='#8D8D8D',font=('Segoe UI',12,'bold'),relief='flat',cursor='hand2',padx=14,pady=9)
+        b._flash_after=None
+        def restore():
+            b._flash_after=None
+            if b.winfo_exists():b.config(bg=normal,fg='white',activebackground=hover,activeforeground='white',relief='flat')
+        def press(event=None):
+            if str(b.cget('state'))=='disabled':return
+            if b._flash_after is not None:b.after_cancel(b._flash_after);b._flash_after=None
+            b.config(bg=pressed,fg='#111111',activebackground=pressed,activeforeground='#111111',relief='sunken')
+        def release(event=None):
+            if b._flash_after is not None:b.after_cancel(b._flash_after)
+            b._flash_after=b.after(220,restore)
+        def invoke():
+            press();b.update_idletasks();release();fn()
+        def cleanup(event):
+            if b._flash_after is not None:
+                b.after_cancel(b._flash_after);b._flash_after=None
+        b.configure(command=invoke)
+        b.bind('<ButtonPress-1>',press);b.bind('<ButtonRelease-1>',release)
+        b.bind('<KeyPress-space>',press);b.bind('<KeyRelease-space>',release)
+        b.bind('<Destroy>',cleanup)
+        return b
     def panel(self,p):
         f=tk.Frame(p,bg=PANEL,padx=18,pady=15)
         f.pack(fill='x',pady=(0,12));return f

@@ -14,6 +14,10 @@ import android.graphics.Rect;
 import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.Drawable;
+import android.content.res.ColorStateList;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.hardware.usb.UsbDevice;
@@ -53,14 +57,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class MainActivity extends Activity {
     private static final String USB_ACTION = "pl.cg.ziehlconfig.cm3.USB_PERMISSION";
-    private static final int NAVY = Color.rgb(38, 54, 71);
+    private static final int NAVY = Color.rgb(0, 0, 0);
     private static final int BLUE = Color.rgb(245, 105, 22);
-    private static final int LIGHT = Color.rgb(38, 54, 71);
+    private static final int LIGHT = Color.rgb(0, 0, 0);
     private static final int GREY = Color.rgb(198, 208, 218);
     private static final int GREEN = Color.rgb(111, 214, 159);
-    private static final int CARD = Color.rgb(51, 72, 92);
-    private static final int FIELD = Color.rgb(64, 87, 108);
-    private static final int BORDER = Color.rgb(89, 111, 131);
+    private static final int CARD = Color.rgb(22, 22, 22);
+    private static final int FIELD = Color.rgb(37, 37, 37);
+    private static final int BORDER = Color.rgb(73, 73, 73);
     private static final int WHITE = Color.rgb(247, 248, 250);
 
     private UsbManager usbManager;
@@ -160,19 +164,33 @@ public final class MainActivity extends Activity {
         p.topMargin = dp(topDp);
         parent.addView(child,p);
     }
+    private Drawable buttonBackground(int normal) {
+        StateListDrawable states=new StateListDrawable();
+        states.addState(new int[]{-android.R.attr.state_enabled},shape(Color.rgb(42,42,42),13));
+        states.addState(new int[]{android.R.attr.state_pressed},shape(Color.rgb(255,188,94),13));
+        states.addState(new int[]{android.R.attr.state_focused},shape(Color.rgb(255,188,94),13));
+        states.addState(new int[]{},shape(normal,13));
+        return new RippleDrawable(ColorStateList.valueOf(Color.rgb(255,220,165)),states,shape(Color.WHITE,13));
+    }
+    private ColorStateList buttonTextColors() {
+        return new ColorStateList(new int[][]{
+            new int[]{-android.R.attr.state_enabled},new int[]{android.R.attr.state_pressed},
+            new int[]{android.R.attr.state_focused},new int[]{}},
+            new int[]{GREY,Color.BLACK,Color.BLACK,WHITE});
+    }
     private Button button(String name) {
         Button b = new Button(this);
         b.setText(name); b.setAllCaps(false);
         b.setTextSize(15); b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        b.setTextColor(Color.WHITE); b.setBackground(shape(BLUE,13));
+        b.setTextColor(buttonTextColors()); b.setBackgroundTintList(null); b.setBackground(buttonBackground(BLUE));
         b.setMinHeight(dp(52));
         b.setPadding(dp(12),dp(13),dp(12),dp(13));
         return b;
     }
     private Button secondaryButton(String name) {
         Button b=button(name);
-        b.setBackground(outlined(FIELD,13));
-        b.setTextColor(WHITE);
+        b.setBackground(buttonBackground(FIELD));
+        b.setTextColor(buttonTextColors());
         return b;
     }
     /** Keep a numeric input above Android's on-screen keyboard.
@@ -457,7 +475,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0.1 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0.2 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -678,7 +696,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.1\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.2\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")

@@ -12,7 +12,7 @@ def main():
     try:
         if os.name == 'nt':
             import ctypes
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ClimaGold.CM3.1')
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ClimaGold.ZiehlAbegg.Black.102')
         from simple_app import SimpleApp
         app = SimpleApp()
         if smoke:
@@ -37,7 +37,7 @@ def main():
             app.destroy()
             if '--smoke-report' in sys.argv:
                 target = Path(sys.argv[sys.argv.index('--smoke-report') + 1])
-                target.write_text(json.dumps({'version': '1.0.1 CM3 TEST', 'gui_started': True, 'logo_loaded': True,
+                target.write_text(json.dumps({'version': '1.0.2 CM3 TEST', 'gui_started': True, 'logo_loaded': True,
                     'editable_address_after_preset': True, 'factory_communication_preset': True}), encoding='utf-8')
             return 0
         app.mainloop()

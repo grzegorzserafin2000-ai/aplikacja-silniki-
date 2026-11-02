@@ -10,3 +10,6 @@ Oryginał nie jest ładowany na tablecie ani w EXE, dzięki czemu ogromny rozmia
 
 ## Wygląd 1.0.1
 Nagłówek eksportuje się poleceniem `java -Xmx3g branding/PrepareLogo.java branding/logo-original.png /tmp/logo-export "#263647"`. Eksport dopasowuje białe obszary do tła interfejsu, zachowując płaskie szare i pomarańczowe litery. Zasób nagłówka ma ten sam kolor tła co widok aplikacji. Wcześniejsze ikony Android i Windows zostały przywrócone z commita 37590bb; nie zastępuje się ich ikoną generowaną przez eksporter logo.
+
+## Wygląd 1.0.2
+Bieżący eksport nagłówka używa koloru `#000000`. Ikony nadal pochodzą z 37590bb. `climagold_dark.ico` jest identyczną kopią wcześniejszej ciemnej ikony pod nową ścieżką, przeznaczoną dla Windows i instalowanego skrótu.

@@ -56,7 +56,7 @@ try {
     $shortcut.TargetPath = $pythonwExe
     $shortcut.Arguments = '"' + (Join-Path $dest 'launcher.pyw') + '"'
     $shortcut.WorkingDirectory = $dest
-    $shortcut.IconLocation = (Join-Path $assets 'climagold.ico') + ',0'
+    $shortcut.IconLocation = (Join-Path $assets 'climagold_dark.ico') + ',0'
     $shortcut.Description = 'Clima Gold Ziehl-Abegg'
     $shortcut.Save()
     Pokaz ("Zainstalowano. Skrot: " + $shortcutPath + ". Program otwiera sie bez czarnej konsoli.")
