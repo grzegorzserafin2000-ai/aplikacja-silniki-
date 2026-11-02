@@ -313,6 +313,10 @@ public final class MainActivity extends Activity {
             @Override public void onNothingSelected(AdapterView<?> parent){}
         });
 
+        factoryButton=secondaryButton("USTAWIENIA FABRYCZNE — 247 / 19200 / Even / 1");
+        add(root,factoryButton,9);
+        factoryButton.setOnClickListener(v->showFactoryOptions());
+
         LinearLayout expert=card(); add(root,expert,0);
         manualToggleButton=secondaryButton("▸  Więcej ustawień"); add(expert,manualToggleButton,0);
         manualFields=column();add(expert,manualFields,8);
@@ -335,8 +339,6 @@ public final class MainActivity extends Activity {
         manualTimeout=number(700);add(manualFields,manualTimeout,4);
         manualButton=secondaryButton("Szukaj w podanym zakresie");add(manualFields,manualButton,9);
         manualButton.setOnClickListener(v->requestManualScan());
-        factoryButton=secondaryButton("Ustaw fabryczną komunikację (bez zapisu)");add(manualFields,factoryButton,9);
-        factoryButton.setOnClickListener(v->showFactoryOptions());
         readResult=text("Po wykryciu zobaczysz tutaj model, aktywny adres i zapisane ustawienia.",16,WHITE,false);
         readResult.setTextIsSelectable(true);
         add(detect,readResult,12);
@@ -456,7 +458,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG TEST 0.16 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG TEST 0.17 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -666,7 +668,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG Android TEST 0.16\n")
+            report.append("Clima Gold ZIEHL-ABEGG Android TEST 0.17\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")

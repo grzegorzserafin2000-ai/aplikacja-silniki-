@@ -1,10 +1,10 @@
-# Clima Gold – ZIEHL-ABEGG Android 0.16 TEST
+# Clima Gold – ZIEHL-ABEGG Android 0.17 TEST
 
 ## Pobieranie aplikacji
 
-- [Pobierz APK 0.16 TEST](downloads/ClimaGold_016.apk)
-- [Pobierz APK w ZIP](downloads/ClimaGold_016_APK.zip)
-- [Źródła i notebook do budowania](downloads/ClimaGold_016_Zrodla_i_notebook.zip)
+- [Pobierz APK 0.17 TEST](downloads/ClimaGold_017.apk)
+- [Pobierz APK w ZIP](downloads/ClimaGold_017_APK.zip)
+- [Źródła i notebook do budowania](downloads/ClimaGold_017_Zrodla_i_notebook.zip)
 
 Na stronie pliku GitHub wybierz **Download raw file** (ikona pobierania). Całe repozytorium można pobrać przez **Code → Download ZIP**.
 
@@ -47,3 +47,5 @@ APK 0.16 ma ten sam podpis co wydane tutaj 0.14 i 0.15; można je aktualizować 
 Uruchom `ZAINSTALUJ_NA_PULPICIE.vbs` z rozpakowanego pakietu źródłowego. Szczegóły w [windows/README_PRZECZYTAJ.txt](windows/README_PRZECZYTAJ.txt). Kod Windows ma 64 testy, w tym testy okna i edycji adresu. Zapis na fizycznym silniku pozostaje niezweryfikowany.
 
 Windows 2.7 przywraca przycisk Ustawienia fabryczne (247 / 19200 / Even / 1). Sam wybór przycisku tylko wypełnia formularz; zapis wymaga przycisku ZMIEŃ PARAMETRY. Logo pozostaje dotychczasowe do otrzymania dostępnego pliku nowej grafiki.
+
+Android 0.17 przenosi przycisk ustawień fabrycznych na główny ekran tabletu. [Opis i ograniczenia](docs/TABLET_017.md).
