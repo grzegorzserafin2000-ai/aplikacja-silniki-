@@ -42,6 +42,6 @@ APK 0.16 ma ten sam podpis co wydane tutaj 0.14 i 0.15; można je aktualizować 
 ## Windows 2.6 TEST
 
 - [Pakiet źródłowy z instalatorem i skrótem na pulpicie](downloads/ClimaGold_Windows_2_6_TEST_Zrodla.zip) — wymaga Python 3.10+ i internetu przy pierwszej instalacji.
-- [Przenośny EXE budowany na Windows](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/tag/windows-v2.6.0-test) — dostępny po udanej kompilacji GitHub Actions; ZIP należy rozpakować przed uruchomieniem.
+- [Przenośny EXE dla Windows x64](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-v2.6.0-test/ClimaGold_ZIEHL_Windows_2_6_TEST.zip) — zbudowany na Windows i sprawdzony testem uruchomienia; ZIP należy rozpakować przed uruchomieniem. Nie wymaga Pythona. [Weryfikacja](docs/WINDOWS_26_WERYFIKACJA.md).
 
 Uruchom `ZAINSTALUJ_NA_PULPICIE.vbs` z rozpakowanego pakietu źródłowego. Szczegóły w [windows/README_PRZECZYTAJ.txt](windows/README_PRZECZYTAJ.txt). Kod Windows ma 61 testów, w tym testy okna i edycji adresu. Zapis na fizycznym silniku pozostaje niezweryfikowany.
