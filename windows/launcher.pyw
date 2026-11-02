@@ -1,0 +1,53 @@
+"""Windows GUI entry point; no console, startup errors saved to LOCALAPPDATA."""
+import json
+import os
+import sys
+import traceback
+from pathlib import Path
+from datetime import datetime
+
+
+def main():
+    smoke = '--smoke-test' in sys.argv
+    try:
+        from simple_app import SimpleApp
+        app = SimpleApp()
+        if smoke:
+            app.withdraw()
+            app.update()
+            app.apply_preset(231)
+            app.manual_addr.set('230')
+            from protocol import decode_h3
+            assert decode_h3(app.target_word()).address == 230
+            assert app.manual_frame.winfo_manager() == 'pack'
+            app.destroy()
+            if '--smoke-report' in sys.argv:
+                target = Path(sys.argv[sys.argv.index('--smoke-report') + 1])
+                target.write_text(json.dumps({'version': '2.6 TEST', 'gui_started': True,
+                    'editable_address_after_preset': True}), encoding='utf-8')
+            return 0
+        app.mainloop()
+        return 0
+    except Exception:
+        report = traceback.format_exc()
+        log_dir = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'ClimaGold_ZIEHL' / 'logs'
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+            (log_dir / 'ostatni_blad.txt').write_text(datetime.now().isoformat(timespec='seconds') + '\n\n' + report, encoding='utf-8')
+        except OSError:
+            pass
+        if smoke:
+            print(report, file=sys.stderr)
+        else:
+            try:
+                from tkinter import Tk, messagebox
+                root = Tk(); root.withdraw()
+                messagebox.showerror('Clima Gold - blad uruchomienia', report[-1600:] + '\n\nRaport: ' + str(log_dir / 'ostatni_blad.txt'))
+                root.destroy()
+            except Exception:
+                pass
+        return 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

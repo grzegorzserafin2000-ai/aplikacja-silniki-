@@ -37,3 +37,11 @@ Szczegółowa analiza i ograniczenia: [docs/ANALIZA_CAREL_015.md](docs/ANALIZA_C
 Nie wykonano próby na tablecie ani silniku. Potrzebny jest raport techniczny po jednej próbie na silniku testowym. APK pozostaje testowe.
 Nie rozszerzono listy obsługiwanych modeli. Logo pozostaje dotychczasowe, ponieważ pakiet nie zawiera nowego pliku PNG/SVG z wiadomości.
 APK 0.16 ma ten sam podpis co wydane tutaj 0.14 i 0.15; można je aktualizować bez odinstalowywania.
+
+
+## Windows 2.6 TEST
+
+- [Pakiet źródłowy z instalatorem i skrótem na pulpicie](downloads/ClimaGold_Windows_2_6_TEST_Zrodla.zip) — wymaga Python 3.10+ i internetu przy pierwszej instalacji.
+- [Przenośny EXE budowany na Windows](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/tag/windows-v2.6.0-test) — dostępny po udanej kompilacji GitHub Actions; ZIP należy rozpakować przed uruchomieniem.
+
+Uruchom `ZAINSTALUJ_NA_PULPICIE.vbs` z rozpakowanego pakietu źródłowego. Szczegóły w [windows/README_PRZECZYTAJ.txt](windows/README_PRZECZYTAJ.txt). Kod Windows ma 61 testów, w tym testy okna i edycji adresu. Zapis na fizycznym silniku pozostaje niezweryfikowany.
