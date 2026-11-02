@@ -84,7 +84,7 @@ public final class MainActivity extends Activity {
     private ScrollView contentScroll;
     private EditText addressEdit, manualFromAddress, manualToAddress, manualTimeout;
     private Spinner manualBaud, manualMode;
-    private Spinner baudSpinner, modeSpinner, purposeSpinner;
+    private Spinner baudSpinner, modeSpinner, purposeSpinner, motorNumberSpinner;
     private LinearLayout manualConfigPanel;
     private volatile int foundProductCode=-1, foundFirmware=-1;
     private volatile boolean compatibleWriteProfile=false;
@@ -111,6 +111,7 @@ public final class MainActivity extends Activity {
         }
     };
 
+    @android.annotation.SuppressLint("UnspecifiedRegisterReceiverFlag") // Flags are supplied on API 33+ below.
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
@@ -125,8 +126,29 @@ public final class MainActivity extends Activity {
         else registerReceiver(usbReceiver, filter);
         buildScreen();
         updateUsbStatus();
+        if(guidedTarget()>0) {
+            factoryButton.setVisibility(View.GONE);
+            manualToggleButton.setVisibility(View.GONE);
+            setInfo("Kreator: "+GuidedSession.motorLabel(guidedTarget())+" • cel 9600 / 8N2, CM=3");
+            applyGuidedTarget();
+        }
+        if(getIntent().hasExtra("verify_addresses")) {
+            factoryButton.setVisibility(View.GONE);
+            manualToggleButton.setVisibility(View.GONE);
+            detectButton.setText("SPRAWDŹ WSZYSTKIE SILNIKI");
+            setInfo("Włącz wszystkie skonfigurowane silniki i wybierz sprawdzenie. Test nie zapisuje parametrów.");
+        }
     }
 
+    private int guidedTarget(){return getIntent().getIntExtra("guided_target",-1);}
+    private void applyGuidedTarget(){
+        if(guidedTarget()<1)return;
+        purposeSpinner.setSelection(2);
+        addressEdit.setText(String.valueOf(guidedTarget()));
+        baudSpinner.setSelection(0);modeSpinner.setSelection(0);
+        addressEdit.setEnabled(false);purposeSpinner.setEnabled(false);motorNumberSpinner.setEnabled(false);
+        baudSpinner.setEnabled(false);modeSpinner.setEnabled(false);
+    }
     private int dp(float v) { return (int)(getResources().getDisplayMetrics().density * v + .5f); }
     private GradientDrawable shape(int color, float radius) {
         GradientDrawable g = new GradientDrawable();
@@ -289,7 +311,7 @@ public final class MainActivity extends Activity {
         LinearLayout detect=card(); add(root,detect,16);
         add(detect,text("1. Podłącz i wykryj silnik",18,WHITE,true),0);
         usbStatus=text("Sprawdzam kabel USB–RS485...",12,GREY,false);add(detect,usbStatus,8);
-        detectButton=button("WYKRYJ SILNIK");add(detect,detectButton,12);
+        detectButton=button("WYSZUKAJ SILNIK");add(detect,detectButton,12);
         detectButton.setOnClickListener(v->requestScan());
         deviceStatus=text("Nie wykryto silnika",22,WHITE,true);add(detect,deviceStatus,12);
         progress=text("",12,GREY,false);add(detect,progress,5);
@@ -303,9 +325,12 @@ public final class MainActivity extends Activity {
 
         editorPanel=card();add(root,editorPanel,0);
         add(editorPanel,text("2. Zmień adres silnika",18,WHITE,true),0);
-        purposeSpinner=spinner("Skrót: NAWIEW — 231", "Skrót: WYWIEW — 232", "Własne ustawienia");
+        purposeSpinner=spinner("NAWIEW — 231, 233, 235…", "WYWIEW — 232, 234, 236…", "Własne ustawienia");
         add(editorPanel,purposeSpinner,13);
-        add(editorPanel,text("Skróty ustawiają 9600 / 8N2. Adres poniżej możesz zmienić ręcznie.",13,GREY,false),9);
+        label(editorPanel,"NUMER SILNIKA W NAWIEWIE / WYWIEWIE");
+        motorNumberSpinner=spinner("1", "2", "3", "4", "5", "6", "7", "8");
+        add(editorPanel,motorNumberSpinner,5);
+        add(editorPanel,text("Wybierz funkcję i numer silnika. Ustawienia: 9600 / 8N2, CM=3. Adres możesz też wpisać ręcznie.",13,GREY,false),9);
         label(editorPanel,"NOWY ADRES MODBUS (1–247)");
         addressEdit=number(231);add(editorPanel,addressEdit,6);
         addressEdit.setContentDescription("Nowy adres silnika od 1 do 247");
@@ -323,10 +348,14 @@ public final class MainActivity extends Activity {
         purposeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override public void onItemSelected(AdapterView<?> parent,View view,int index,long id){
                 manualConfigPanel.setVisibility(index==2 ? View.VISIBLE : View.GONE);
-                if(index==0) addressEdit.setText("231");
-                if(index==1) addressEdit.setText("232");
+                updateSuggestedAddress();
                 if(index<2){baudSpinner.setSelection(0);modeSpinner.setSelection(0);}
             }
+            @Override public void onNothingSelected(AdapterView<?> parent){}
+        });
+
+        motorNumberSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override public void onItemSelected(AdapterView<?> parent,View view,int index,long id){updateSuggestedAddress();}
             @Override public void onNothingSelected(AdapterView<?> parent){}
         });
 
@@ -540,8 +569,10 @@ public final class MainActivity extends Activity {
             stopButton.setEnabled(b);
             addressEdit.setEnabled(!b);
             purposeSpinner.setEnabled(!b);
+            motorNumberSpinner.setEnabled(!b);
             baudSpinner.setEnabled(!b);
             modeSpinner.setEnabled(!b);
+            if(!b)applyGuidedTarget();
             refreshWriteButton();
         });
     }
@@ -667,6 +698,7 @@ public final class MainActivity extends Activity {
                 result.link.parity==UsbSerialPort.PARITY_ODD?3:result.link.stop==2?0:2;
         modeSpinner.setSelection(modeIndex);
         editorPanel.setVisibility(View.VISIBLE);
+        applyGuidedTarget();
         refreshWriteButton();
     }
 
@@ -681,6 +713,7 @@ public final class MainActivity extends Activity {
 
     private void startScan() {
         if(busy || chosenDriver==null) return;
+        if(getIntent().hasExtra("verify_addresses")){verifyGuidedMotors();return;}
         cancel.set(false);
         final boolean extended=extendedScan.isChecked();
         foundLink=null; foundAddress=-1; rawCom=-1; foundProductCode=-1; foundFirmware=-1; compatibleWriteProfile=false;
@@ -696,7 +729,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.3\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.1.0\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
@@ -785,6 +818,13 @@ public final class MainActivity extends Activity {
         });
     }
 
+    private void updateSuggestedAddress(){
+        int purpose=purposeSpinner.getSelectedItemPosition();
+        if(purpose<0 || purpose>1 || motorNumberSpinner==null) return;
+        int number=motorNumberSpinner.getSelectedItemPosition()+1;
+        addressEdit.setText(String.valueOf(AddressInput.ventilationAddress(purpose==0,number)));
+    }
+
     private void confirmWrite(){
         String reason=writeBlockReason();
         if(reason!=null){new AlertDialog.Builder(this).setTitle("Nie można zmienić parametrów")
@@ -793,9 +833,9 @@ public final class MainActivity extends Activity {
         final String mode;
         try {
             int preset=purposeSpinner.getSelectedItemPosition();
-            address=AddressInput.parse(addressEdit.getText().toString());
-            baud=preset<2?9600:Integer.parseInt(baudSpinner.getSelectedItem().toString());
-            mode=preset<2?"8N2":modeSpinner.getSelectedItem().toString().substring(0,3);
+            address=guidedTarget()>0?guidedTarget():AddressInput.parse(addressEdit.getText().toString());
+            baud=(guidedTarget()>0 || preset<2)?9600:Integer.parseInt(baudSpinner.getSelectedItem().toString());
+            mode=(guidedTarget()>0 || preset<2)?"8N2":modeSpinner.getSelectedItem().toString().substring(0,3);
             config=ModbusRtu.configValue(address,baud,mode);
             if(baud==38400 || baud==115200)
                 throw new IllegalArgumentException("Ta prędkość nie ma potwierdzonej obsługi zapisu.");
@@ -842,6 +882,7 @@ public final class MainActivity extends Activity {
                     public long now() { return android.os.SystemClock.elapsedRealtime(); }
                     public void sleep(long millis) { android.os.SystemClock.sleep(millis); }
                 });
+                programmer.setProgressListener(this::setProgress);
                 String oldMode="8"+(oldLink.parity==UsbSerialPort.PARITY_EVEN?"E":
                         oldLink.parity==UsbSerialPort.PARITY_ODD?"O":"N")+oldLink.stop;
                 result=programmer.run(new CommunicationProgrammer.Settings(oldAddr,oldLink.baud,oldMode),
@@ -861,7 +902,9 @@ public final class MainActivity extends Activity {
                 lastScanReport += "\n\nZAPIS (PROSTA):\n"+finalLog;
                 info.setText(finalText);
                 new AlertDialog.Builder(this).setTitle(finalTitle)
-                  .setMessage(finalText).setPositiveButton("OK",null).show();
+                  .setMessage(finalText).setPositiveButton(guidedTarget()>0 && confirmed?"Wróć do kreatora":"OK",(dialog,which)->{
+                      if(guidedTarget()>0 && confirmed){Intent data=new Intent();data.putExtra("confirmed_address",address);data.putExtra("report",GuidedSession.motorLabel(address)+"\n"+lastScanReport);setResult(RESULT_OK,data);finish();}
+                  }).show();
                 if(confirmed){
                     showDetection(new Hit(linkFor(baud,mode),address,newValue,3,3,0,productCode,firmware,confirmedH4));
                     deviceStatus.setText("Potwierdzono adres " + address);
@@ -876,6 +919,41 @@ public final class MainActivity extends Activity {
         });
     }
 
+    private void verifyGuidedMotors(){
+        final int[] addresses=getIntent().getIntArrayExtra("verify_addresses");
+        if(addresses==null || addresses.length==0)return;
+        cancel.set(false);setBusy(true);editorPanel.setVisibility(View.GONE);
+        final UsbSerialDriver driver=chosenDriver;
+        jobs.execute(()->{
+            StringBuilder report=new StringBuilder("KOŃCOWY TEST — 9600 / 8N2, CM=3\n");
+            boolean ok=true;
+            try(SerialBridge io=new SerialBridge(usbManager,driver)){
+                io.open();io.configure(linkFor(9600,"8N2"));
+                for(int address:addresses){
+                    if(cancel.get()){ok=false;report.append("Przerwano test.\n");break;}
+                    setProgress("Sprawdzanie: "+GuidedSession.motorLabel(address));
+                    ModbusRtu.Reply id=io.transaction(address,4,1,0,450);
+                    ModbusRtu.Reply h3=io.transaction(address,3,3,0,450);
+                    ModbusRtu.Reply h4=io.transaction(address,3,4,0,450);
+                    boolean match=id!=null && id.successful() && h3!=null && h3.successful()
+                        && h4!=null && h4.successful() && GuidedSession.verificationMatches(address,id.value,h3.value,h4.value);
+                    ok &= match;
+                    report.append(GuidedSession.motorLabel(address)).append(match?": OK\n":": NIEPOTWIERDZONY (adres, h3, model lub CM)\n");
+                }
+                report.append("\nRAMKI RTU:\n").append(io.diagnostics());
+            }catch(Exception e){ok=false;report.append("Błąd: ").append(e.getMessage());}
+            final boolean success=ok;final String details=report.toString();
+            handler.post(()->{setBusy(false);lastScanReport=details;readResult.setText(details);setInfo(success?"Wszystkie silniki potwierdzone.":"Nie potwierdzono całej centrali.");
+                new AlertDialog.Builder(this).setTitle(success?"Test potwierdzony":"Test niepotwierdzony").setMessage(details.length()>2000?details.substring(0,2000):details)
+                    .setPositiveButton("Wróć do kreatora",(d,w)->{Intent result=new Intent();result.putExtra("report",details);setResult(success?RESULT_OK:RESULT_CANCELED,result);finish();}).setCancelable(false).show();
+            });
+        });
+    }
+    @Override public void onBackPressed(){
+        if(busy){cancel.set(true);setInfo("Poczekaj na zakończenie bieżącej operacji.");return;}
+        if(guidedTarget()>0 || getIntent().hasExtra("verify_addresses")){Intent data=new Intent();data.putExtra("report",lastScanReport);setResult(RESULT_CANCELED,data);}
+        super.onBackPressed();
+    }
     @Override public void onDestroy() {
         cancel.set(true);
         jobs.shutdownNow();

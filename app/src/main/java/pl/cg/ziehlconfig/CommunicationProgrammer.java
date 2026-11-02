@@ -38,10 +38,14 @@ public final class CommunicationProgrammer {
     private final Transport io;
     private final RtuSession.Clock clock;
     private final StringBuilder log=new StringBuilder();
+    private java.util.function.Consumer<String> progress=value->{};
+    public void setProgressListener(java.util.function.Consumer<String> listener){progress=listener;}
+    private void phase(String value){try{progress.accept(value);}catch(RuntimeException ignored){}}
     private boolean attempted;
     private int confirmedControlWord=-1;
     public CommunicationProgrammer(Transport io,RtuSession.Clock clock) { this.io=io;this.clock=clock; }
     private Result result(boolean success,boolean pending,String message) {
+        phase(success?"✓ Odczyt kontrolny zakończony — ustawienia potwierdzone":"Nie potwierdzono pełnego kodowania — sprawdź raport");
         return new Result(success,pending,attempted,message,log.toString(),confirmedControlWord);
     }
     private ModbusRtu.Reply request(Settings link,int function,int register,int value,int timeout) throws IOException {
@@ -65,6 +69,7 @@ public final class CommunicationProgrammer {
     }
     /** Finish only on a freshly confirmed target link. CM is h4 bits 0..3. */
     private Result finish(Settings target,int product,int word) throws IOException {
+        phase("4/5 — kontrola połączenia i ustawianie CM=3");
         if(!targetConfirmed(target,product,word))
             return result(false,false,"Nie potwierdzono docelowego silnika przed CM. CM nie zapisano.");
         int before=read(target,3,4);
@@ -98,10 +103,12 @@ public final class CommunicationProgrammer {
                 return result(false,false,"CM odczytano jako 3, ale końcowa kontrola komunikacji nie powiodła się.");
         }
         confirmedControlWord=desired;
+        phase("5/5 — końcowy odczyt kontrolny potwierdzony");
         return result(true,false,"Potwierdzono "+target.address+" / "+target.baud+" / "+target.mode+"; CM 3/3.");
     }
     public Result run(Settings live,int product,int previousWord,int targetWord) {
         log.setLength(0);attempted=false;confirmedControlWord=-1;
+        phase("1/5 — połączenie i odczyt parametrów silnika");
         if((product!=0x0100 && product!=0x0101) ||
                 !ModbusRtu.resemblesEcblueComParameter(previousWord) ||
                 !ModbusRtu.resemblesEcblueComParameter(targetWord))
@@ -132,6 +139,7 @@ public final class CommunicationProgrammer {
             }
             if(previousWord==targetWord && live.same(target))
                 return finish(target,product,targetWord);
+            phase("2/5 — adres i parametry komunikacji");
             if(previousWord!=targetWord) {
                 attempted=true;
                 ModbusRtu.Reply pin=request(live,6,0,1234,900);
@@ -160,6 +168,7 @@ public final class CommunicationProgrammer {
                 } while(clock.now()<deadline);
                 if(!stored)return result(false,false,"h3 nie potwierdził nowej wartości po zapisie FC06. Aktywacji 3698 nie wysłano. Skopiuj raport techniczny.");
             } else log.append("h3 już zawiera cel; pominięto PIN 1234 i zapis h3.\n");
+            phase("3/5 — zastosowanie zapisanych parametrów");
             // Activation is sent once on the ACTIVE link, not the address stored in h3.
             attempted=true;
             try {

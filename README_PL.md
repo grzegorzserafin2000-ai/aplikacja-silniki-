@@ -4,9 +4,9 @@ Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa wido
 
 ## Pobieranie
 
-- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v103.apk)
-- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v103.zip)
-- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_v103.zip)
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v110.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v110.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_v110.zip)
 - [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.3-test/ClimaGold_CM3_Windows_TEST.zip)
 - [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v103.zip)
 
@@ -36,3 +36,19 @@ Wersja 1.0.1 przywraca wcześniejszą ikonę i dopasowuje logo do jednolitego, j
 Wygląd 1.0.2: czarne tło (#000000), logo dopasowane do czerni, widoczne bursztynowe podświetlenie naciskanych przycisków. Windows: uruchom `ClimaGold_ZiehlAbegg_102.exe` z rozpakowanego ZIP. Nowa nazwa EXE i osobny plik ciemnej ikony ograniczają wpływ starej ikony z pamięci podręcznej Windows.
 
 Skanowanie 1.0.3: domyślnie adresy od 247 w dół do 200, kolejno 19200/8E1, 9600/8N2, 9600/8E1, 19200/8N2. Pierwsza odpowiedź kończy skan. Wszystkie adresy 1–247 wymagają zaznaczenia pełnego skanowania w Więcej ustawień. Bez odpowiedzi cztery profile mogą zająć około 3 minut; można przerwać skan.
+
+## Tablet 1.1.0 — kreator ZIEHL-ABEGG
+
+Menu zawiera konfigurację standardową i zaawansowaną. Standardowa prowadzi przez
+numer centrali (C/K + 4–5 cyfr), typ centrali, liczbę silników, przygotowanie,
+kodowanie kolejnych silników i końcowy test. Do 8 silników na każdą sekcję:
+nawiew 231,233,…245; wywiew 232,234,…246. Adres 247 pozostaje dostępny ręcznie.
+Każdy silnik należy najpierw wyszukać i potwierdzić kodowanie; wynik jest zaliczany
+wyłącznie po odczycie kontrolnym adresu, transmisji i CM. Parametry: 9600/8N2, CM=3.
+
+Postęp jest zapisywany na tablecie, można wznowić sesję i wyeksportować raport TXT.
+Końcowy test całej centrali wykonuje wyłącznie odczyty. Ponowne uruchomienie aplikacji
+wymaga ponownego końcowego testu, zanim pokaże ona pełne potwierdzenie.
+Zaawansowana zachowuje ręczne parametry, wyszukiwanie i przygotowanie komunikacji fabrycznej.
+To wersja testowa: kompilacja, lint i testy symulowanego protokołu przeszły;
+interfejs i rzeczywiste kodowanie wymagają próby na tablecie z silnikiem.

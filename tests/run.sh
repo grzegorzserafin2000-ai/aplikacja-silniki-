@@ -10,6 +10,8 @@ if [ -n "${JAVA_HOME:-}" ]; then
   runner="$JAVA_HOME/bin/java"
 fi
 sources=app/src/main/java/pl/cg/ziehlconfig
-"$compiler" -d "$classes" "$sources/AddressInput.java" "$sources/ModbusRtu.java" "$sources/RtuSession.java" "$sources/CommunicationProgrammer.java" tests/AddressInputTest.java tests/CommunicationTest.java
+"$compiler" -d "$classes" "$sources/AddressInput.java" "$sources/GuidedSession.java" "$sources/ModbusRtu.java" "$sources/RtuSession.java" "$sources/CommunicationProgrammer.java" tests/AddressInputTest.java tests/CommunicationTest.java tests/GuidedSessionTest.java
 "$runner" -cp "$classes" AddressInputTest
 "$runner" -cp "$classes" pl.cg.ziehlconfig.CommunicationTest
+
+"$runner" -cp "$classes" GuidedSessionTest

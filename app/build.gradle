@@ -7,8 +7,8 @@ android {
         applicationId 'pl.cg.ziehlconfig.cm3'
         minSdk 26
         targetSdk 35
-        versionCode 4
-        versionName '1.0.3-cm3-test'
+        versionCode 5
+        versionName '1.1.0-cm3-test'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
