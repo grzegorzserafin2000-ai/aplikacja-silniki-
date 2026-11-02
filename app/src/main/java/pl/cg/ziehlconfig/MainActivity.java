@@ -297,7 +297,7 @@ public final class MainActivity extends Activity {
         stopButton.setEnabled(false);
         stopButton.setOnClickListener(v->{cancel.set(true);setInfo("Zatrzymywanie wyszukiwania...");});
         extendedScan=new CheckBox(this);
-        extendedScan.setText("Pełne skanowanie");
+        extendedScan.setText("Pełne skanowanie wszystkich adresów (dłuższe)");
         extendedScan.setTextColor(GREY);
         // Advanced-only selection below.
 
@@ -475,7 +475,7 @@ public final class MainActivity extends Activity {
             final String err=error;
             final int scannedFinal=scanned;
             final boolean interrupted=cancel.get();
-            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0.2 • SZUKANIE RĘCZNE\n"+
+            final String report="Clima Gold ZIEHL-ABEGG CM3 TEST 1.0.3 • SZUKANIE RĘCZNE\n"+
                     "Zakres: "+settings.range.first+"–"+settings.range.last+
                     "\nKomunikacja: "+settings.link.label+
                     "\nTimeout: "+settings.timeout+" ms\nSprawdzone adresy: "+scannedFinal+
@@ -696,28 +696,28 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.2\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.0.3\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
                   .append("Testowane protokoły: MODBUS RTU FC03 h3, FC03 h0, FC04 i0, FC04 i1.\n");
             try(SerialBridge io=new SerialBridge(usbManager,driver)) {
                 io.open();
-                // Stage 1: discover factory default and the company's most common addresses.
-                final int[] priority={247,231,232,221,1};
-                for(SerialBridge.Link link:SerialBridge.COMMON_LINKS) {
+                // Stage 1: scan company addresses in descending order.
+                for(int quickIndex=0;quickIndex<4;quickIndex++) {
+                    SerialBridge.Link link=SerialBridge.COMMON_LINKS[quickIndex];
                     if(cancel.get() || hit!=null) break;
                     try { io.configure(link); profiles++; }
                     catch(Exception e) { report.append("Pominięto ").append(link.label).append(": ").append(e.getMessage()).append("\n"); continue; }
-                    setProgress("Szybkie: " +link.label+" • 247, 231, 232, 221, 1");
-                    for(int addr:priority) {
+                    setProgress("Szybkie: " +link.label+" • 247 → 200");
+                    for(int addr=247;addr>=200;addr--) {
                         if(cancel.get()) break;
                         hit=detectAt(io,link,addr,240,counters);
                         if(hit!=null) break;
                     }
                 }
                 // Stage 2: scan every address on the most likely links.
-                for(int idx=0;idx<4 && hit==null && !cancel.get();idx++) {
+                for(int idx=0;extended && idx<4 && hit==null && !cancel.get();idx++) {
                     SerialBridge.Link link=SerialBridge.COMMON_LINKS[idx];
                     try { io.configure(link); profiles++; }
                     catch(Exception e) { report.append("Pominięto ").append(link.label).append(": ").append(e.getMessage()).append("\n"); continue; }
@@ -775,9 +775,9 @@ public final class MainActivity extends Activity {
                     setInfo("Przerwano na żądanie. Możesz skopiować raport.");
                 } else {
                     deviceStatus.setText("Nie wykryto silnika.");
-                    progress.setText("Nie znaleziono odpowiedzi MODBUS.");
+                    progress.setText(extended?"Pełny skan: brak odpowiedzi MODBUS.":"Szybki skan zakończony: brak odpowiedzi MODBUS.");
                     setInfo("Sprawdź przewody RS485 i zgodność adaptera. " +
-                            (extended?"":"Włącz rozszerzone skanowanie. ")+
+                            (extended?"":"Pełne skanowanie uruchomisz w «Więcej ustawień». ")+
                             "Skopiuj raport i wyślij do analizy. "+finalError);
                 }
                 setBusy(false);

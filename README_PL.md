@@ -4,11 +4,11 @@ Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa wido
 
 ## Pobieranie
 
-- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v102.apk)
-- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v102.zip)
-- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_v102.zip)
-- [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.2-test/ClimaGold_CM3_Windows_TEST.zip)
-- [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v102.zip)
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v103.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_v103.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_v103.zip)
+- [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.3-test/ClimaGold_CM3_Windows_TEST.zip)
+- [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v103.zip)
 
 ZIP Windows należy rozpakować przed uruchomieniem. EXE nie wymaga Pythona. Instalator źródłowy wymaga Python 3.10+ i internetu przy pierwszej instalacji. [Instrukcja Windows](windows/README_PRZECZYTAJ.txt).
 
@@ -27,10 +27,12 @@ Android ma osobny applicationId `pl.cg.ziehlconfig.cm3`; stara aplikacja `pl.cg.
 ## Weryfikacja
 
 Android: `JAVA_HOME=<JDK17> tests/run.sh` — 13 przypadków adresu i 48 asercji komunikacji. Budowanie: Gradle 8.9, JDK 17, Android SDK 35, `gradle assembleDebug`.
-Windows: z katalogu `windows`, `python -m unittest discover -s tests -v` — 74 testy, w tym GUI. Workflow buduje EXE na Windows i uruchamia gotowy plik w trybie smoke-test.
+Windows: z katalogu `windows`, `python -m unittest discover -s tests -v` — 78 testów, w tym GUI. Workflow buduje EXE na Windows i uruchamia gotowy plik w trybie smoke-test.
 
 Działanie z fizycznym silnikiem i USB-RS485 nadal wymaga sprawdzenia. Program pozostaje wersją testową. Po próbie należy skopiować raport techniczny TX/RX.
 
 Wersja 1.0.1 przywraca wcześniejszą ikonę i dopasowuje logo do jednolitego, jaśniejszego tła aplikacji #263647. Zmieniono wyłącznie wygląd; nazwa i obsługa CM pozostają takie same.
 
 Wygląd 1.0.2: czarne tło (#000000), logo dopasowane do czerni, widoczne bursztynowe podświetlenie naciskanych przycisków. Windows: uruchom `ClimaGold_ZiehlAbegg_102.exe` z rozpakowanego ZIP. Nowa nazwa EXE i osobny plik ciemnej ikony ograniczają wpływ starej ikony z pamięci podręcznej Windows.
+
+Skanowanie 1.0.3: domyślnie adresy od 247 w dół do 200, kolejno 19200/8E1, 9600/8N2, 9600/8E1, 19200/8N2. Pierwsza odpowiedź kończy skan. Wszystkie adresy 1–247 wymagają zaznaczenia pełnego skanowania w Więcej ustawień. Bez odpowiedzi cztery profile mogą zająć około 3 minut; można przerwać skan.

@@ -38,7 +38,7 @@ def main():
             app.destroy()
             if '--smoke-report' in sys.argv:
                 target = Path(sys.argv[sys.argv.index('--smoke-report') + 1])
-                target.write_text(json.dumps({'version': '1.0.2 CM3 TEST', 'gui_started': True, 'logo_loaded': True, 'dark_icon_loaded': True,
+                target.write_text(json.dumps({'version': '1.0.3 CM3 TEST', 'gui_started': True, 'logo_loaded': True, 'dark_icon_loaded': True,
                     'editable_address_after_preset': True, 'factory_communication_preset': True}), encoding='utf-8')
             return 0
         app.mainloop()

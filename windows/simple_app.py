@@ -147,7 +147,7 @@ class SimpleApp(tk.Tk):
             w.pack(side='right')
         self.manual_search_btn=self.btn(self.advanced,'Szukaj w zakresie',self.manual_search,False)
         self.manual_search_btn.pack(fill='x',pady=(9,3))
-        tk.Checkbutton(self.advanced,text='Rozszerzone profile automatycznego skanowania',variable=self.extended,bg=PANEL,fg=FG,selectcolor=PANEL).pack(anchor='w',pady=5)
+        tk.Checkbutton(self.advanced,text='Pełne skanowanie wszystkich adresów (dłuższe)',variable=self.extended,bg=PANEL,fg=FG,selectcolor=PANEL).pack(anchor='w',pady=5)
         self.btn(self.advanced,'Pokaż raport techniczny',self.show_log,False).pack(fill='x',pady=3)
 
         self.status_label=self.label(outer,'',12,MUTED)
@@ -280,8 +280,12 @@ class SimpleApp(tk.Tk):
                 elif k=='found':
                     x,metrics=x
                     self.detected=x;self.device.set(f'Znaleziono silnik • adres {x.active_address}' if x else 'Nie znaleziono silnika')
+                    no_reply=('Wyszukiwanie przerwane.' if self.stop.is_set() else
+                        'Pełne skanowanie zakończone: brak odpowiedzi. Sprawdź zasilanie i A/B.' if metrics.get('full_scan') else
+                        'Brak odpowiedzi w szybkim skanie. Sprawdź zasilanie i A/B; pełne skanowanie jest w Więcej ustawień.' if 'full_scan' in metrics else
+                        'Brak odpowiedzi w podanym zakresie. Sprawdź zasilanie, A/B i parametry komunikacji.')
                     self.status.set('Silnik gotowy do konfiguracji.' if x and eligible(x) else
-                       'Wykryto urządzenie bez obsługi zapisu.' if x else 'Sprawdź kabel i wyszukiwanie ręczne.')
+                       'Wykryto urządzenie bez obsługi zapisu.' if x else no_reply)
                     if x:
                         self.manual_addr.set(str(x.active_address));self.manual_baud.set(str(x.baud))
                         self.manual_parity.set({'N':'None','E':'Even','O':'Odd'}[x.parity]);self.manual_stop.set(str(x.stopbits))

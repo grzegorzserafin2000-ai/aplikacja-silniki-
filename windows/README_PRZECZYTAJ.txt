@@ -1,8 +1,8 @@
 CLIMA GOLD - ZIEHL-ABEGG CM3 WINDOWS TEST
 
 WERSJA PRZENOSNA EXE (bez Pythona):
-Pobierz ZIP z wydania windows-cm3-v1.0.2-test na GitHub, rozpakuj calosc i uruchom
-ClimaGold_ZiehlAbegg_102.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
+Pobierz ZIP z wydania windows-cm3-v1.0.3-test na GitHub, rozpakuj calosc i uruchom
+ClimaGold_ZiehlAbegg_103.exe. Nie uruchamiaj go bezposrednio wewnatrz ZIP.
 Program nie otwiera czarnej konsoli. EXE jest niepodpisane certyfikatem wydawcy.
 
 PAKIET ZRODLOWY / INSTALACJA ZE SKROTEM:
@@ -39,3 +39,5 @@ GitHub Actions buduje ten sam program na Windows i sprawdza uruchomienie gotoweg
 WYGLAD 1.0.1: przywrocono wczesniejsza ikone, naglowek logo ma jednolite tlo aplikacji #263647. Interfejs ma jasniejsze panele. Nazwa oraz osobna instalacja pozostaja takie same.
 
 WYGLAD 1.0.2: czarne tlo aplikacji i logo. Przyciski rozjasniaja sie podczas naciskania oraz przez chwile po kliknieciu. Plik EXE ma nowa nazwe, aby uniknac starej ikony zapamietanej przez Windows. Ikona w zasobach pozostaje ciemna i pomaranczowa.
+
+SKANOWANIE 1.0.3: adresy 247, 246, ... 200 w kazdym z czterech podstawowych trybow. Pierwsza odpowiedz konczy skan. Pelne 1-247 tylko po zaznaczeniu opcji w Wiecej ustawien. Bez silnika skan moze trwac okolo 3 minut; mozna go przerwac.

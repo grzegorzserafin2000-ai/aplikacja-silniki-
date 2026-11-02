@@ -59,3 +59,35 @@ class ScanTests(unittest.TestCase):
         self.assertFalse(hit.can_consider_h3)
 
 if __name__=='__main__': unittest.main()
+
+class QuickScanTests(unittest.TestCase):
+    def setup_scan(self, reader):
+        from unittest.mock import patch, MagicMock
+        connection=MagicMock();connection.__enter__.return_value=connection
+        return patch('scan_service._open',return_value=connection),patch('scan_service.read_at',side_effect=reader)
+    def test_no_motor_finishes_without_full_scan(self):
+        a,b=self.setup_scan(lambda *args:None)
+        with a,b as read:
+            found,metrics=auto_scan('COM3',lambda _:None,threading.Event())
+        self.assertIsNone(found);self.assertEqual(read.call_count,192)
+        self.assertFalse(metrics['full_scan'])
+        self.assertTrue(all(call.args[2] in PRIORITY for call in read.call_args_list))
+    def test_first_reply_stops_immediately(self):
+        marker=object();a,b=self.setup_scan(lambda *args:marker)
+        with a,b as read:found,metrics=auto_scan('COM3',lambda _:None,threading.Event())
+        self.assertIs(found,marker);self.assertEqual(read.call_count,1)
+    def test_full_addresses_only_when_requested(self):
+        stop=threading.Event();seen=[]
+        def reader(*args):
+            seen.append(args[2])
+            if args[2] not in PRIORITY:stop.set()
+            return None
+        a,b=self.setup_scan(reader)
+        with a,b:_,metrics=auto_scan('COM3',lambda _:None,stop,True)
+        self.assertTrue(metrics['full_scan']);self.assertTrue(any(x not in PRIORITY for x in seen))
+    def test_addresses_descend_from_247_to_200(self):
+        a,b=self.setup_scan(lambda *args:None)
+        with a,b as read:
+            auto_scan('COM3',lambda _:None,threading.Event())
+        addresses=[call.args[2] for call in read.call_args_list]
+        self.assertEqual(addresses,list(range(247,199,-1))*4)

@@ -17,7 +17,7 @@ COMMON_LINKS = (
     (38400,'N',2),(4800,'N',2),(19200,'O',1),(9600,'O',1),
     (4800,'N',1),(38400,'N',1),(4800,'O',1),(38400,'O',1),
 )
-PRIORITY = (247, 231, 232, 221, 1)
+PRIORITY = tuple(range(247, 199, -1))
 
 @dataclass(frozen=True)
 class Detection:
@@ -213,8 +213,8 @@ def manual_scan(port: str, first: int, last: int, baud: int, parity: str, stopbi
 
 
 def auto_scan(port, progress, stop, extended=False, target=None):
-    """Priority scan first, full default scan second, optional remaining modes third."""
-    metrics={'requests':0, 'addresses':0, 'profiles':0}
+    """Quick priority scan by default; full ranges require explicit selection."""
+    metrics={'requests':0, 'addresses':0, 'profiles':0, 'full_scan':bool(extended)}
     detected=None
     links=list(COMMON_LINKS)
     targets=list(PRIORITY)
@@ -222,9 +222,9 @@ def auto_scan(port, progress, stop, extended=False, target=None):
         # Check target after a restart before doing any other address.
         p=(target.baud, target.mode[1], int(target.mode[2]))
         links=[p]+[entry for entry in links if entry != p]
-        targets=[target.address]+[a for a in targets if a!=target.address]
-    phases=[('Szybkie',links,targets,.24), ('Pełne',links[:4],range(1,248),.22)]
+    phases=[('Szybkie',links[:4],targets,.24)]
     if extended:
+        phases.append(('Pełne',links[:4],range(1,248),.22))
         phases.append(('Rozszerzone',links[4:],range(1,248),.25))
     for name, profiles, addresses, timeout in phases:
         for baud, parity, bits in profiles:
