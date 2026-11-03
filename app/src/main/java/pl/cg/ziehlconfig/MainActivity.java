@@ -79,6 +79,9 @@ public final class MainActivity extends Activity {
     private TextView usbStatus, deviceStatus, progress, readResult, info, writeHint;
     private Button detectButton, stopButton, writeButton, reportButton, manualButton, factoryButton, manualToggleButton;
     private CheckBox extendedScan;
+    private LinearLayout busyVisual,codeStages;
+    private ImageView activityFan;
+    private android.animation.ObjectAnimator fanSpin;
     private volatile String lastScanReport = "Nie uruchomiono jeszcze skanowania.";
     private LinearLayout editorPanel, manualFields;
     private ScrollView contentScroll;
@@ -207,6 +210,8 @@ public final class MainActivity extends Activity {
         b.setTextColor(buttonTextColors()); b.setBackgroundTintList(null); b.setBackground(buttonBackground(BLUE));
         b.setMinHeight(dp(52));
         b.setPadding(dp(12),dp(13),dp(12),dp(13));
+        Visuals.decorate(b);
+        b.setCompoundDrawablesRelative(Visuals.icon(this,Visuals.actionIcon(name),WHITE,24),null,null,null);
         return b;
     }
     private Button secondaryButton(String name) {
@@ -314,7 +319,16 @@ public final class MainActivity extends Activity {
         detectButton=button("WYSZUKAJ SILNIK");add(detect,detectButton,12);
         detectButton.setOnClickListener(v->requestScan());
         deviceStatus=text("Nie wykryto silnika",22,WHITE,true);add(detect,deviceStatus,12);
-        progress=text("",12,GREY,false);add(detect,progress,5);
+        busyVisual=new LinearLayout(this);busyVisual.setGravity(Gravity.CENTER_VERTICAL);
+        activityFan=new ImageView(this);activityFan.setImageResource(R.drawable.ui_fan);
+        activityFan.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        busyVisual.addView(activityFan,new LinearLayout.LayoutParams(dp(36),dp(36)));
+        android.widget.ProgressBar activityBar=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        activityBar.setIndeterminate(true);activityBar.setIndeterminateTintList(ColorStateList.valueOf(BLUE));
+        LinearLayout.LayoutParams activityLp=new LinearLayout.LayoutParams(0,dp(8),1);activityLp.setMargins(dp(16),0,0,0);busyVisual.addView(activityBar,activityLp);
+        add(detect,busyVisual,12);busyVisual.setVisibility(View.GONE);
+        codeStages=column();add(detect,codeStages,10);codeStages.setVisibility(View.GONE);
+        progress=text("",14,GREY,false);progress.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);add(detect,progress,8);
         stopButton=secondaryButton("Przerwij wyszukiwanie");add(detect,stopButton,9);
         stopButton.setEnabled(false);
         stopButton.setOnClickListener(v->{cancel.set(true);setInfo("Zatrzymywanie wyszukiwania...");});
@@ -559,10 +573,30 @@ public final class MainActivity extends Activity {
             .setNegativeButton("Anuluj",null).show();
     }
     private void setInfo(String value) { handler.post(()->info.setText(value)); }
-    private void setProgress(String value) { handler.post(()->progress.setText(value)); }
+    private void setProgress(String value) { handler.post(()->{
+        progress.setText(value);
+        progress.setTextColor(value.startsWith("✓")?Visuals.GREEN:GREY);
+        if(value.length()>3 && value.charAt(1)=='/' && value.charAt(2)=='5'){
+            int stage=value.charAt(0)-'1';
+            if(stage>=0 && stage<5){codeStages.removeAllViews();codeStages.addView(Visuals.steps(this,new String[]{"Odczyt","Adres","Zastosuj","CM=3","Kontrola"},stage));codeStages.setVisibility(View.VISIBLE);}
+        }
+    }); }
+    private void animateActivity(boolean active){
+        if(fanSpin!=null){fanSpin.cancel();fanSpin=null;}
+        activityFan.setRotation(0);
+        if(active && android.animation.ValueAnimator.areAnimatorsEnabled()){
+            fanSpin=android.animation.ObjectAnimator.ofFloat(activityFan,"rotation",0,360);
+            fanSpin.setDuration(1600);fanSpin.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            fanSpin.setInterpolator(new android.view.animation.LinearInterpolator());fanSpin.start();
+        }
+    }
+    @Override protected void onStart(){super.onStart();if(activityFan!=null && busy)animateActivity(true);}
+    @Override protected void onStop(){if(activityFan!=null)animateActivity(false);super.onStop();}
     private void setBusy(boolean b) {
         busy=b;
         handler.post(()->{
+            busyVisual.setVisibility(b?View.VISIBLE:View.GONE);animateActivity(b);
+            if(b){codeStages.setVisibility(View.GONE);progress.setTextColor(GREY);}
             detectButton.setEnabled(!b);
             if(manualButton!=null) manualButton.setEnabled(!b);
             if(factoryButton!=null) factoryButton.setEnabled(!b);
@@ -729,7 +763,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.1.0\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.2.0\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
@@ -745,6 +779,7 @@ public final class MainActivity extends Activity {
                     setProgress("Szybkie: " +link.label+" • 247 → 200");
                     for(int addr=247;addr>=200;addr--) {
                         if(cancel.get()) break;
+                        setProgress("Szybkie: "+link.label+" • adres "+addr+" (247 → 200)");
                         hit=detectAt(io,link,addr,240,counters);
                         if(hit!=null) break;
                     }
@@ -865,6 +900,7 @@ public final class MainActivity extends Activity {
         setBusy(true);
         handler.post(()->stopButton.setEnabled(false));
         setInfo("Trwa zmiana parametrów i sprawdzanie nowego połączenia. Poczekaj na wynik.");
+        contentScroll.smoothScrollTo(0,0);
         final int oldAddr=foundAddress,oldWord=rawCom,productCode=foundProductCode,firmware=foundFirmware;
         final SerialBridge.Link oldLink=foundLink;
         final UsbSerialDriver driver=chosenDriver;
@@ -956,6 +992,7 @@ public final class MainActivity extends Activity {
     }
     @Override public void onDestroy() {
         cancel.set(true);
+        if(activityFan!=null)animateActivity(false);
         jobs.shutdownNow();
         try { unregisterReceiver(usbReceiver); } catch(Exception ignored) {}
         super.onDestroy();

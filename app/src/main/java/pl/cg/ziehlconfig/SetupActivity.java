@@ -37,7 +37,8 @@ public final class SetupActivity extends Activity {
     TextView v = new TextView(this);
     v.setText(value);
     v.setTextSize(size);
-    v.setTextColor(Color.WHITE);
+    v.setTextColor(size >= 18 ? Color.WHITE : Visuals.MUTED);
+    if (size >= 20) v.setTypeface(null, android.graphics.Typeface.BOLD);
     add(v);
   }
 
@@ -60,6 +61,14 @@ public final class SetupActivity extends Activity {
     s.addState(new int[] {android.R.attr.state_pressed}, shape(0xffffbc5e));
     s.addState(new int[] {}, shape(0xff292929));
     b.setBackground(new RippleDrawable(ColorStateList.valueOf(ORANGE), s, null));
+    Visuals.decorate(b);
+    if (title.startsWith("✓")) {
+      b.setBackground(
+          new RippleDrawable(
+              ColorStateList.valueOf(ORANGE),
+              Visuals.panel(this, 0xff13251d, Visuals.GREEN),
+              null));
+    }
     b.setOnClickListener(v -> action.run());
     add(b);
     return b;
@@ -122,25 +131,37 @@ public final class SetupActivity extends Activity {
     root.addView(logo, new LinearLayout.LayoutParams(-1, dp(85)));
     text("Clima Gold Ziehl-Abegg", 22);
     text(heading, 21);
+    if (step >= 0)
+      add(
+          Visuals.steps(
+              this, new String[] {"Dane", "Silniki", "Przygotuj", "Koduj", "Test"}, step));
+    Visuals.enter(root);
   }
 
   private void menu() {
     step = -1;
     page("Wybierz konfigurację");
-    button(
-        "Konfiguracja standardowa",
-        () -> {
-          if (planned.length > 0) resumeChoice();
-          else {
-            step = 0;
-            render();
-          }
-        });
-    text("Kreator centrali: dane, silniki, kodowanie i końcowy test.", 15);
-    button("Konfiguracja zaawansowana", () -> startActivity(new Intent(this, MainActivity.class)));
-    text(
-        "Wyszukiwanie silnika, ręczne parametry, komunikacja fabryczna i raport diagnostyczny.",
-        15);
+    add(
+        Visuals.tile(
+            this,
+            R.drawable.ui_unit,
+            "Konfiguracja standardowa",
+            "Krok po kroku: dane centrali, silniki i końcowy test.",
+            () -> {
+              if (planned.length > 0) resumeChoice();
+              else {
+                step = 0;
+                render();
+              }
+            }));
+    add(
+        Visuals.tile(
+            this,
+            R.drawable.ui_tune,
+            "Konfiguracja zaawansowana",
+            "Wyszukiwanie, ręczne parametry i diagnostyka silnika.",
+            () -> startActivity(new Intent(this, MainActivity.class))));
+    text("ZIEHL-ABEGG • USB / RS485", 13);
   }
 
   private void resumeChoice() {
@@ -276,6 +297,9 @@ public final class SetupActivity extends Activity {
           });
     } else if (step == 3) {
       text(central + " — silniki", 20);
+      int complete = 0;
+      for (boolean ok : confirmed) if (ok) complete++;
+      text("Potwierdzone silniki: " + complete + " / " + planned.length, 16);
       for (int i = 0; i < planned.length; i++) {
         final int index = i;
         button(
@@ -402,7 +426,10 @@ public final class SetupActivity extends Activity {
     i.setType("text/plain");
     i.addCategory(Intent.CATEGORY_OPENABLE);
     i.putExtra(
-        Intent.EXTRA_TITLE, "ClimaGold_" + (central.isEmpty() ? "raport" : central.substring(0, Math.min(64, central.length()))) + ".txt");
+        Intent.EXTRA_TITLE,
+        "ClimaGold_"
+            + (central.isEmpty() ? "raport" : central.substring(0, Math.min(64, central.length())))
+            + ".txt");
     startActivityForResult(i, EXPORT);
   }
 
