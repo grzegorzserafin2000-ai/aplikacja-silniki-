@@ -83,6 +83,7 @@ public final class MainActivity extends Activity {
     private ImageView activityFan;
     private android.animation.ObjectAnimator fanSpin;
     private volatile String lastScanReport = "Nie uruchomiono jeszcze skanowania.";
+    private String guidedAttemptHistory = "";
     private LinearLayout editorPanel, manualFields;
     private ScrollView contentScroll;
     private EditText addressEdit, manualFromAddress, manualToAddress, manualTimeout;
@@ -109,7 +110,9 @@ public final class MainActivity extends Activity {
             } else {
                 pendingStart = false;
                 pendingManual = false;
-                setInfo("Nie przyznano dostępu do urządzenia USB.");
+                detectButton.setEnabled(true);
+                setInfo(simpleWizard() ? "Nie przyznano dostępu do urządzenia USB. Naciśnij Spróbuj ponownie i zezwól na dostęp."
+                    : "Nie przyznano dostępu do urządzenia USB.");
             }
         }
     };
@@ -132,15 +135,74 @@ public final class MainActivity extends Activity {
         if(guidedTarget()>0) {
             factoryButton.setVisibility(View.GONE);
             manualToggleButton.setVisibility(View.GONE);
-            setInfo("Kreator: "+GuidedSession.motorLabel(guidedTarget())+" • cel 9600 / 8N2, CM=3");
+            if (!simpleWizard()) setInfo("Kreator: "+GuidedSession.motorLabel(guidedTarget())+" • cel 9600 / 8N2, CM=3");
             applyGuidedTarget();
         }
         if(getIntent().hasExtra("verify_addresses")) {
             factoryButton.setVisibility(View.GONE);
             manualToggleButton.setVisibility(View.GONE);
             detectButton.setText("SPRAWDŹ WSZYSTKIE SILNIKI");
-            setInfo("Włącz wszystkie skonfigurowane silniki i wybierz sprawdzenie. Test nie zapisuje parametrów.");
+            setInfo("Sprawdzam wszystkie wentylatory. Test nie zmienia ich ustawień.");
         }
+        if (simpleWizard()) {
+            if (state != null) {
+                guidedAttemptHistory = state.getString("guidedHistory", "");
+                lastScanReport = state.getString("guidedReport", lastScanReport);
+            }
+            buildGuidedScreen();
+            // Only the explicit start action from SetupActivity authorizes a new automatic run.
+            // Activity recreation never automatically repeats a write.
+            if (state == null) handler.post(this::requestScan);
+            else guidedFailure("Działanie zostało przerwane. Sprawdź wentylator przed ponowną próbą.");
+        }
+    }
+
+    private boolean simpleWizard() {
+        return getIntent().getBooleanExtra("guided_auto", false) || getIntent().hasExtra("verify_addresses");
+    }
+
+    private void move(LinearLayout parent, View child, int margin) {
+        if (child.getParent() instanceof ViewGroup) ((ViewGroup) child.getParent()).removeView(child);
+        add(parent, child, margin);
+    }
+
+    /** Dedicated nontechnical screen, sharing the proven transport and programmer. */
+    private void buildGuidedScreen() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true); scroll.setBackgroundColor(Color.BLACK);
+        contentScroll = scroll;
+        LinearLayout root = column(); root.setPadding(dp(24), dp(30), dp(24), dp(36));
+        scroll.addView(root); setContentView(scroll);
+        scroll.setOnApplyWindowInsetsListener((v, i) -> {
+            scroll.setPadding(0, i.getSystemWindowInsetTop(), 0, i.getSystemWindowInsetBottom()); return i;
+        });
+        ImageView logo = new ImageView(this); logo.setImageResource(R.drawable.climagold_full);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        root.addView(logo, new LinearLayout.LayoutParams(-1, dp(80)));
+        add(root, text(guidedTarget() > 0 ? GuidedSession.simpleLabel(guidedTarget()).toUpperCase(java.util.Locale.ROOT)
+            : "SPRAWDZENIE CENTRALI", 30, WHITE, true), 24);
+        add(root, text(guidedTarget() > 0 ? "Pozostaw włączony tylko ten wentylator. Centrala musi być zatrzymana."
+            : "Pozostaw włączone wszystkie skonfigurowane wentylatory.", 20, WHITE, false), 16);
+        move(root, deviceStatus, 24); deviceStatus.setText("Gotowe do rozpoczęcia");
+        move(root, busyVisual, 20);
+        move(root, codeStages, 16);
+        move(root, progress, 14); progress.setText("");
+        move(root, info, 14); info.setText("Aplikacja wykona kolejne kroki automatycznie.");
+        move(root, detectButton, 24);
+        detectButton.setText("Spróbuj ponownie");
+        move(root, stopButton, 12);
+        move(root, menuBackButton, 16);
+        add(root, text("Obracający się symbol oznacza pracę aplikacji, a nie obracanie wentylatora.", 13, GREY, false), 20);
+        Visuals.enter(root);
+    }
+
+    private void guidedFailure(String message) {
+        deviceStatus.setText("Nie udało się potwierdzić ustawień");
+        deviceStatus.setTextColor(WHITE);
+        progress.setText(message);
+        progress.setTextColor(GREY);
+        info.setText("Pozostaw włączony tylko wskazany wentylator. Sprawdź połączenie i spróbuj ponownie. Szczegóły zachowano w raporcie.");
+        codeStages.setVisibility(View.GONE);
     }
 
     private int guidedTarget(){return getIntent().getIntExtra("guided_target",-1);}
@@ -441,12 +503,13 @@ public final class MainActivity extends Activity {
         requestUsbPermission(true);
     }
     private void requestUsbPermission(boolean manual) {
-        if (busy) return;
+        if (busy || pendingStart) return;
         updateUsbStatus();
         if (chosenDriver == null) { setInfo("Podłącz adapter USB–RS485 przez USB OTG."); return; }
         UsbDevice device = chosenDriver.getDevice();
         if (!usbManager.hasPermission(device)) {
             pendingStart=true;
+            detectButton.setEnabled(false);
             pendingManual=manual;
             Intent intent = new Intent(USB_ACTION).setPackage(getPackageName());
             int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE;
@@ -578,6 +641,19 @@ public final class MainActivity extends Activity {
     }
     private void setInfo(String value) { handler.post(()->info.setText(value)); }
     private void setProgress(String value) { handler.post(()->{
+        if (simpleWizard()) {
+            boolean programming = value.length() > 3 && value.charAt(1) == '/' && value.charAt(2) == '5';
+            int phase = programming ? (value.charAt(0) >= '5' ? 2 : 1)
+                : value.startsWith("✓") || value.startsWith("Nie potwierdzono") ? 2 : 0;
+            progress.setText(getIntent().hasExtra("verify_addresses") ? "Sprawdzam: " + value.replace("Sprawdzanie: ", "").replaceAll(" — adres [0-9]+", "")
+                : new String[]{"Szukam wentylatora. To może potrwać kilka minut.", "Zapisuję ustawienia. Poczekaj.", "Sprawdzam zapisane ustawienia."}[phase]);
+            codeStages.removeAllViews();
+            codeStages.addView(getIntent().hasExtra("verify_addresses")
+                ? Visuals.steps(this, new String[]{"Końcowe sprawdzenie"}, 0)
+                : Visuals.steps(this, new String[]{"Wyszukiwanie", "Kodowanie", "Sprawdzenie"}, phase));
+            codeStages.setVisibility(View.VISIBLE);
+            return;
+        }
         progress.setText(value);
         progress.setTextColor(value.startsWith("✓")?Visuals.GREEN:GREY);
         if(value.length()>3 && value.charAt(1)=='/' && value.charAt(2)=='5'){
@@ -737,6 +813,11 @@ public final class MainActivity extends Activity {
                 result.link.parity==UsbSerialPort.PARITY_ODD?3:result.link.stop==2?0:2;
         modeSpinner.setSelection(modeIndex);
         editorPanel.setVisibility(View.VISIBLE);
+        if (simpleWizard()) {
+            editorPanel.setVisibility(View.GONE);
+            deviceStatus.setText("Wentylator odnaleziony");
+            progress.setText("Przygotowuję ustawienia.");
+        }
         applyGuidedTarget();
         refreshWriteButton();
     }
@@ -759,6 +840,8 @@ public final class MainActivity extends Activity {
         editorPanel.setVisibility(View.GONE);
         deviceStatus.setText("Wyszukiwanie urządzeń MODBUS…");
         readResult.setText("");
+        if (simpleWizard() && !lastScanReport.equals("Nie uruchomiono jeszcze skanowania."))
+            guidedAttemptHistory += "\nPOPRZEDNIA PRÓBA:\n" + lastScanReport + "\n";
         lastScanReport="Trwa skanowanie…";
         setBusy(true);
         final UsbSerialDriver driver=chosenDriver;
@@ -768,7 +851,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.2.1\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.3.0\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
@@ -837,6 +920,21 @@ public final class MainActivity extends Activity {
             final String finalReport=report.toString();
             handler.post(()->{
                 lastScanReport=finalReport;
+                if (simpleWizard()) {
+                    setBusy(false);
+                    if (result != null && !cancel.get() && finalError.isEmpty()) {
+                        showDetection(result);
+                        String blocked = writeBlockReason();
+                        if (blocked != null) {
+                            guidedFailure("Nie rozpoznano obsługiwanego wentylatora. Poproś instalatora o sprawdzenie modelu.");
+                        } else {
+                            int target = guidedTarget();
+                            writeConfig(target, 9600, "8N2", ModbusRtu.configValue(target, 9600, "8N2"));
+                        }
+                    } else guidedFailure(cancel.get() ? "Wyszukiwanie przerwane. Niczego nie zakodowano."
+                        : "Brak odpowiedzi. Sprawdź zasilanie wentylatora, adapter USB i przewody RS485.");
+                    return;
+                }
                 if(result!=null) {
                     showDetection(result);
                     notifyDetected(result);
@@ -941,6 +1039,18 @@ public final class MainActivity extends Activity {
             handler.post(()->{
                 setBusy(false);
                 lastScanReport += "\n\nZAPIS (PROSTA):\n"+finalLog;
+                if (simpleWizard()) {
+                    if (confirmed) {
+                        Intent data = new Intent();
+                        data.putExtra("confirmed_address", address);
+                        data.putExtra("report", GuidedSession.motorLabel(address) + "\n" + guidedAttemptHistory + lastScanReport);
+                        setResult(RESULT_OK, data); finish();
+                    } else {
+                        foundAddress = -1; foundLink = null; rawCom = -1; compatibleWriteProfile = false;
+                        guidedFailure("Nie potwierdzono ustawień. Nie przechodź do następnego wentylatora.");
+                    }
+                    return;
+                }
                 info.setText(finalText);
                 new AlertDialog.Builder(this).setTitle(finalTitle)
                   .setMessage(finalText).setPositiveButton(guidedTarget()>0 && confirmed?"Wróć do kreatora":"OK",(dialog,which)->{
@@ -985,6 +1095,10 @@ public final class MainActivity extends Activity {
             }catch(Exception e){ok=false;report.append("Błąd: ").append(e.getMessage());}
             final boolean success=ok;final String details=report.toString();
             handler.post(()->{setBusy(false);lastScanReport=details;readResult.setText(details);setInfo(success?"Wszystkie silniki potwierdzone.":"Nie potwierdzono całej centrali.");
+                if (simpleWizard()) {
+                    Intent result = new Intent(); result.putExtra("report", details);
+                    setResult(success ? RESULT_OK : RESULT_CANCELED, result); finish(); return;
+                }
                 new AlertDialog.Builder(this).setTitle(success?"Test potwierdzony":"Test niepotwierdzony").setMessage(details.length()>2000?details.substring(0,2000):details)
                     .setPositiveButton("Wróć do kreatora",(d,w)->{Intent result=new Intent();result.putExtra("report",details);setResult(success?RESULT_OK:RESULT_CANCELED,result);finish();}).setCancelable(false).show();
             });
@@ -992,8 +1106,13 @@ public final class MainActivity extends Activity {
     }
     @Override public void onBackPressed(){
         if(busy){cancel.set(true);setInfo("Poczekaj na zakończenie bieżącej operacji.");return;}
-        if(guidedTarget()>0 || getIntent().hasExtra("verify_addresses")){Intent data=new Intent();data.putExtra("report",lastScanReport);setResult(RESULT_CANCELED,data);}
+        if(guidedTarget()>0 || getIntent().hasExtra("verify_addresses")){Intent data=new Intent();data.putExtra("report",guidedAttemptHistory + lastScanReport);setResult(RESULT_CANCELED,data);}
         super.onBackPressed();
+    }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putString("guidedHistory", guidedAttemptHistory);
+        state.putString("guidedReport", lastScanReport);
+        super.onSaveInstanceState(state);
     }
     @Override public void onDestroy() {
         cancel.set(true);

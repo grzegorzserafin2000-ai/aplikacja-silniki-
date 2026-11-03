@@ -19,6 +19,7 @@ public final class SetupActivity extends Activity {
   private int[] planned = new int[0];
   private boolean[] confirmed = new boolean[0];
   private boolean verified = false;
+  private boolean awaitingSwitchOff = false;
   private static final int MOTOR = 20, VERIFY = 21, EXPORT = 22;
   private static final int ORANGE = 0xffff6900, GREY = 0xffaaaaaa;
 
@@ -187,6 +188,7 @@ public final class SetupActivity extends Activity {
                           log = "";
                           verified = false;
                           current = 0;
+                          awaitingSwitchOff = false;
                           step = 0;
                           save();
                           render();
@@ -238,6 +240,7 @@ public final class SetupActivity extends Activity {
                 confirmed = new boolean[0];
                 verified = false;
                 current = 0;
+                awaitingSwitchOff = false;
                 log = "";
               }
               central = nextCentral;
@@ -274,6 +277,7 @@ public final class SetupActivity extends Activity {
               planned = next;
               confirmed = new boolean[planned.length];
               current = 0;
+              awaitingSwitchOff = false;
               verified = false;
             }
             step = 2;
@@ -281,13 +285,10 @@ public final class SetupActivity extends Activity {
             render();
           });
     } else if (step == 2) {
-      text("Przygotowanie rozdzielnicy", 20);
-      text(
-          "Podłącz adapter USB-RS485. Zatrzymaj centralę i wyłącz zabezpieczenia konfigurowanych"
-              + " silników. Podczas kodowania włączaj tylko wskazany silnik.\n\n"
-              + "Kreator zapisuje adres, 9600 / 8N2 i CM=3. Każdy zapis wymaga odczytu"
-              + " kontrolnego.",
-          17);
+      text("Przygotuj centralę", 26);
+      add(Visuals.connectionGuide(this));
+      text("1. Zatrzymaj centralę.\n2. Podłącz adapter USB–RS485 do tabletu i przewodów centrali.\n3. Wyłącz zabezpieczenia wszystkich konfigurowanych wentylatorów.", 19);
+      text("Aplikacja wskaże jeden wentylator naraz: najpierw nawiew, potem wywiew. Nie zmieniaj połączeń przy włączonym zasilaniu.", 17);
       button(
           "Instalacja przygotowana — dalej",
           () -> {
@@ -296,44 +297,38 @@ public final class SetupActivity extends Activity {
             render();
           });
     } else if (step == 3) {
-      text(central + " — silniki", 20);
+      if (planned.length == 0) { step = 1; render(); return; }
+      if (!awaitingSwitchOff) current = GuidedSession.nextMotor(planned, confirmed);
       int complete = 0;
       for (boolean ok : confirmed) if (ok) complete++;
-      text("Potwierdzone silniki: " + complete + " / " + planned.length, 16);
-      for (int i = 0; i < planned.length; i++) {
-        final int index = i;
-        button(
-            (confirmed[i] ? "✓ " : "○ ") + GuidedSession.motorLabel(planned[i]),
-            () -> {
-              current = index;
-              new AlertDialog.Builder(this)
-                  .setTitle(GuidedSession.motorLabel(planned[index]))
-                  .setMessage(
-                      "Włącz wyłącznie wskazany silnik. Pozostałe silniki pozostaw wyłączone."
-                          + " Następnie wybierz WYSZUKAJ SILNIK, sprawdź wynik i potwierdź"
-                          + " kodowanie.")
-                  .setPositiveButton("Przejdź do kodowania", (d, w) -> launchMotor())
-                  .setNegativeButton("Anuluj", null)
-                  .show();
-            });
-      }
-      text("Po potwierdzonym kodowaniu wyłącz zabezpieczenie silnika i przejdź do kolejnego.", 16);
-      button(
-          "Dalej — test całej centrali",
-          () -> {
-            if (!GuidedSession.allConfirmed(planned, confirmed)) {
-              message("Najpierw potwierdź kodowanie wszystkich silników.");
-              return;
-            }
-            step = 4;
-            save();
-            render();
+      text(central + " • gotowe " + complete + " z " + planned.length, 16);
+      if (current >= planned.length) {
+        text("Wszystkie wentylatory zakodowane", 26);
+        text("Teraz sprawdzimy całą centralę.", 19);
+        button("Przejdź do końcowego sprawdzenia", () -> { step = 4; save(); render(); });
+      } else {
+        int address = planned[current];
+        add(Visuals.motorPlan(this, planned, confirmed, current));
+        text((awaitingSwitchOff ? "✓ Gotowy: " : "Teraz: ") + GuidedSession.simpleLabel(address).toUpperCase(java.util.Locale.ROOT), 30);
+        if (awaitingSwitchOff) {
+          text("Ustawienia sprawdzone i potwierdzone.", 18);
+          text("Wyłącz zabezpieczenie tego wentylatora. Pozostałe pozostaw wyłączone.", 23);
+          button("Zabezpieczenie wyłączone — dalej", () -> {
+            awaitingSwitchOff = false;
+            current = GuidedSession.nextMotor(planned, confirmed);
+            if (current == planned.length) step = 4;
+            save(); render();
           });
+        } else {
+          text("Włącz zabezpieczenie tylko tego wentylatora. Wszystkie pozostałe muszą być wyłączone, a centrala zatrzymana.", 23);
+          text("Po naciśnięciu przycisku aplikacja sama wyszuka wentylator, zapisze ustawienia i sprawdzi wynik.", 17);
+          button("Wentylator włączony — rozpocznij", () -> launchMotor());
+        }
+      }
     } else {
       text(central + " — końcowe sprawdzenie", 20);
       text(
-          "Włącz zabezpieczenia wszystkich skonfigurowanych silników. Test tylko odczytuje adres,"
-              + " komunikację i CM każdego silnika.",
+          "Włącz zabezpieczenia wszystkich wentylatorów. Następnie naciśnij przycisk poniżej — aplikacja sprawdzi je po kolei.",
           17);
       text(
           verified
@@ -357,7 +352,7 @@ public final class SetupActivity extends Activity {
       if (!canFinish)
         text("Zakończenie będzie dostępne po poprawnym sprawdzeniu wszystkich wentylatorów.", 14);
     }
-    if (step > 0)
+    if (step > 0 && step < 3)
       button(
           "Wstecz",
           () -> {
@@ -399,6 +394,7 @@ public final class SetupActivity extends Activity {
     save();
     Intent i = new Intent(this, MainActivity.class);
     i.putExtra("guided_target", planned[current]);
+    i.putExtra("guided_auto", true);
     startActivityForResult(i, MOTOR);
   }
 
@@ -420,13 +416,18 @@ public final class SetupActivity extends Activity {
       if (data != null) {
         log += "\n" + new java.util.Date() + "\n" + data.getStringExtra("report") + "\n";
         if (result == RESULT_OK) {
-          if (request == MOTOR && data.getIntExtra("confirmed_address", -1) == planned[current])
+          if (request == MOTOR && current < planned.length
+              && data.getIntExtra("confirmed_address", -1) == planned[current]) {
             confirmed[current] = true;
+            awaitingSwitchOff = true;
+          }
           if (request == VERIFY) verified = true;
         }
       }
       save();
       render();
+      if (request == VERIFY && result != RESULT_OK)
+        message("Nie wszystkie wentylatory odpowiedziały poprawnie. Sprawdź ich zasilanie i przewody, następnie ponów sprawdzenie. Szczegóły zapisano w raporcie.");
     }
   }
 
@@ -470,6 +471,7 @@ public final class SetupActivity extends Activity {
       o.put("supply", supply);
       o.put("extract", extract);
       o.put("current", current);
+      o.put("awaitingSwitchOff", awaitingSwitchOff);
       o.put("log", log);
       JSONArray a = new JSONArray(), c = new JSONArray();
       for (int i = 0; i < planned.length; i++) {
@@ -493,6 +495,7 @@ public final class SetupActivity extends Activity {
       supply = o.optInt("supply", 1);
       extract = o.optInt("extract", 1);
       current = o.optInt("current", 0);
+      awaitingSwitchOff = o.optBoolean("awaitingSwitchOff", false);
       log = o.optString("log", "");
       JSONArray a = o.optJSONArray("addresses"), c = o.optJSONArray("confirmed");
       if (a != null && c != null) {
@@ -503,6 +506,7 @@ public final class SetupActivity extends Activity {
           confirmed[i] = c.getBoolean(i);
         }
       }
+      if (current < 0 || current >= planned.length || !confirmed[current]) awaitingSwitchOff = false;
       verified = false;
     } catch (Exception e) {
       planned = new int[0];

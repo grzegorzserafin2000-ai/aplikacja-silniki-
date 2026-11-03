@@ -45,6 +45,24 @@ public final class GuidedSessionTest {
     check(!GuidedSession.canFinish(new int[0], new boolean[0], true));
     check(!GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true}, true));
     check(GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true, true}, true));
+    // A failed motor holds the position; only confirmed readback advances the sequence.
+    int[] plan = GuidedSession.addresses(3, 2);
+    boolean[] progress = new boolean[plan.length];
+    check(GuidedSession.nextMotor(plan, progress) == 0);
+    for (int n = 0; n < plan.length; n++) {
+      check(GuidedSession.nextMotor(plan, progress) == n);
+      check(!GuidedSession.canFinish(plan, progress, true));
+      progress[n] = true;
+      check(GuidedSession.nextMotor(plan, progress) == n + 1);
+    }
+    check(!GuidedSession.canFinish(plan, progress, false));
+    check(GuidedSession.canFinish(plan, progress, true));
+    progress[1] = false; // Restored sessions resume the earliest unfinished motor.
+    check(GuidedSession.nextMotor(plan, progress) == 1);
+    invalid(() -> GuidedSession.nextMotor(new int[0], new boolean[0]));
+    invalid(() -> GuidedSession.nextMotor(plan, new boolean[1]));
+    check(GuidedSession.simpleLabel(231).equals("Nawiew 1"));
+    check(GuidedSession.simpleLabel(234).equals("Wywiew 2"));
     int h3 = ModbusRtu.configValue(231, 9600, "8N2");
     check(GuidedSession.verificationMatches(231, 0x100, h3, 0xA503));
     check(GuidedSession.verificationMatches(231, 0x101, h3, 3));

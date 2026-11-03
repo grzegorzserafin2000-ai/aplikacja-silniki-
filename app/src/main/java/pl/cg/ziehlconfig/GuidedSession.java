@@ -31,6 +31,19 @@ public final class GuidedSession {
         + address;
   }
 
+  /** The first unfinished motor is the only motor available in the standard wizard. */
+  public static int nextMotor(int[] planned, boolean[] confirmed) {
+    if (planned.length == 0 || planned.length != confirmed.length)
+      throw new IllegalArgumentException("Nieprawidłowy plan wentylatorów.");
+    for (int i = 0; i < confirmed.length; i++) if (!confirmed[i]) return i;
+    return planned.length;
+  }
+
+  public static String simpleLabel(int address) {
+    String label = motorLabel(address);
+    return label.substring(0, label.indexOf(" —"));
+  }
+
   public static boolean verificationMatches(int address, int product, int h3, int h4) {
     return (product == 0x0100 || product == 0x0101)
         && h3 == ModbusRtu.configValue(address, 9600, "8N2")

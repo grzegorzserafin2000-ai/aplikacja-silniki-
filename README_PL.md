@@ -71,3 +71,24 @@ reguł zapisu, adresów, zakresów skanowania ani walidacji numeru centrali.
 Nazwa, identyfikator osobnej aplikacji, logo i ikona uruchamiania pozostają te same.
 
 1.2.1: końcowy ekran ma przycisk „Zakończ procedurę”, odblokowany tylko po poprawnym końcowym teście i potwierdzonym kodowaniu wszystkich zaplanowanych silników. Zakończenie dodaje wpis do raportu i pokazuje podsumowanie. Konfiguracja zaawansowana ma na górze „Wróć do menu”; ekran silnika w kreatorze ma „Wróć do kreatora”. Powrót jest nieaktywny podczas operacji.
+
+
+## Kreator standardowy 1.3.0
+
+[Pobierz APK 1.3.0 — uproszczony kreator](downloads/ClimaGold_Kreator_1.3.0.apk) · [SHA-256](downloads/ClimaGold_Kreator_1.3.0.apk.sha256)
+
+Jeden wentylator na ekranie, w stałej kolejności: wszystkie nawiewy, następnie
+wszystkie wywiewy. Po włączeniu tylko wskazanego wentylatora przycisk
+„Wentylator włączony — rozpocznij” uruchamia wyszukanie, zapis oraz odczyt kontrolny.
+Nie trzeba wybierać adresu ani parametrów komunikacji. Po potwierdzonym wyniku
+należy wyłączyć zabezpieczenie tego wentylatora i potwierdzić przejście dalej.
+Błąd zatrzymuje postęp; ponowna próba wymaga naciśnięcia przycisku.
+Przywrócenie ekranu po przerwaniu aplikacji nie uruchamia ponownie zapisu.
+
+Schemat nawiewu i wywiewu podświetla bieżącą pozycję. Obracająca się ikona
+podczas operacji oznacza pracę aplikacji, a nie obracanie silnika. Zielone
+znaczniki wymagają potwierdzonego wyniku. Animacje respektują ustawienia systemowe
+i zatrzymują się po ukryciu ekranu. Na końcu trzeba włączyć wszystkie wentylatory
+i wykonać końcowy test, zanim pojawi się możliwość zakończenia procedury.
+Raport zachowuje informacje techniczne; konfiguracja zaawansowana pozostaje dostępna.
+Wersja testowa — działanie na tablecie i fizycznych silnikach wymaga próby sprzętowej.

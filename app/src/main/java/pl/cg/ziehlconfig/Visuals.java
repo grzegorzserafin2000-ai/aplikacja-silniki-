@@ -115,6 +115,23 @@ final class Visuals {
     return tile;
   }
 
+  static View motorPlan(Context c, int[] addresses, boolean[] confirmed, int current) {
+    return new MotorDiagram(c, addresses, confirmed, current);
+  }
+
+  static View connectionGuide(Context c) {
+    LinearLayout row = new LinearLayout(c);
+    row.setGravity(Gravity.CENTER);
+    row.setPadding(dp(c, 12), dp(c, 20), dp(c, 12), dp(c, 20));
+    row.setBackground(panel(c, 0xff171717, 0xff493021));
+    for (String label : new String[]{"TABLET", "→", "USB–RS485", "→", "CENTRALA"}) {
+      TextView item = new TextView(c); item.setText(label); item.setTextSize(12);
+      item.setTextColor(ORANGE); item.setGravity(Gravity.CENTER);
+      row.addView(item, new LinearLayout.LayoutParams(0, -2, label.equals("→") ? .35f : 1f));
+    }
+    return row;
+  }
+
   static void enter(View view) {
     if (ValueAnimator.areAnimatorsEnabled()) {
       view.setAlpha(.2f);
