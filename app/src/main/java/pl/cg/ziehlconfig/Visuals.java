@@ -36,6 +36,8 @@ final class Visuals {
 
   static int actionIcon(String title) {
     String t = title.toLowerCase(java.util.Locale.ROOT);
+    if (t.contains("zakończ")) return R.drawable.ui_check;
+    if (t.contains("wróć")) return R.drawable.ui_back;
     if (t.contains("przerwij")) return R.drawable.ui_stop;
     if (t.contains("nawiew")) return R.drawable.ui_supply;
     if (t.contains("wywiew")) return R.drawable.ui_extract;

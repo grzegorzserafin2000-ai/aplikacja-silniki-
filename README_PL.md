@@ -4,9 +4,9 @@ Nowa, osobna aplikacja z pełnym logo użytkownika i kodowaniem CM=3. Nazwa wido
 
 ## Pobieranie
 
-- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v120.apk)
-- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v120.zip)
-- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_Kreator_osobna_v120.zip)
+- [Tablet Android — APK, osobna aplikacja](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v121.apk)
+- [Tablet — APK w ZIP](downloads/ClimaGold_ZiehlAbegg_CM3_Tablet_Kreator_osobna_v121.zip)
+- [Android — źródła i notebook do budowania](downloads/ClimaGold_ZiehlAbegg_CM3_Zrodla_Kreator_osobna_v121.zip)
 - [Windows x64 — przenośny EXE w ZIP](https://github.com/grzegorzserafin2000-ai/aplikacja-silniki-/releases/download/windows-cm3-v1.0.3-test/ClimaGold_CM3_Windows_TEST.zip)
 - [Windows — źródła i instalator skrótu](downloads/ClimaGold_CM3_Windows_Zrodla_v103.zip)
 
@@ -69,3 +69,5 @@ Animacje respektują wyłączenie animacji w Androidzie i zatrzymują się po uk
 Kolor zielony wymaga istniejącego potwierdzenia odczytu; grafika nie zmienia
 reguł zapisu, adresów, zakresów skanowania ani walidacji numeru centrali.
 Nazwa, identyfikator osobnej aplikacji, logo i ikona uruchamiania pozostają te same.
+
+1.2.1: końcowy ekran ma przycisk „Zakończ procedurę”, odblokowany tylko po poprawnym końcowym teście i potwierdzonym kodowaniu wszystkich zaplanowanych silników. Zakończenie dodaje wpis do raportu i pokazuje podsumowanie. Konfiguracja zaawansowana ma na górze „Wróć do menu”; ekran silnika w kreatorze ma „Wróć do kreatora”. Powrót jest nieaktywny podczas operacji.

@@ -28,3 +28,5 @@ Osobna instalacja: applicationId `pl.cg.ziehlconfig.wizard`. Nazwa, logo i ikona
 1.1.1: wybór oznaczenia C/K przez RadioGroup (domyślnie C), osobna walidacja cyfr numeru i błąd przy polu. Testy obejmują C12345 i K12345.
 
 1.1.2: usunięto ograniczenie długości numeru centrali. Przyjmowany jest dowolny niepusty ciąg cyfr, przechowywany jako tekst z zachowaniem zer wiodących.
+
+1.2.1: zakończenie procedury wymaga finalnego potwierdzenia oraz wszystkich pozycji planu potwierdzonych. Sprawdzenie jest zarówno w stanie przycisku, jak i w akcji zakończenia. Powrót do menu z zaawansowanych jest widoczny u góry i blokowany podczas operacji.

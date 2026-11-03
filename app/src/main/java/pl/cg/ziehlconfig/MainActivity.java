@@ -77,7 +77,7 @@ public final class MainActivity extends Activity {
     private volatile boolean pendingManual = false;
 
     private TextView usbStatus, deviceStatus, progress, readResult, info, writeHint;
-    private Button detectButton, stopButton, writeButton, reportButton, manualButton, factoryButton, manualToggleButton;
+    private Button menuBackButton, detectButton, stopButton, writeButton, reportButton, manualButton, factoryButton, manualToggleButton;
     private CheckBox extendedScan;
     private LinearLayout busyVisual,codeStages;
     private ImageView activityFan;
@@ -312,6 +312,10 @@ public final class MainActivity extends Activity {
         top.addView(logo,new LinearLayout.LayoutParams(-1,dp(96)));
         add(top,text("ZIEHL-ABEGG  •  Konfigurator",13,BLUE,true),8);
         add(root,top,0);
+        boolean inWizard=guidedTarget()>0 || getIntent().hasExtra("verify_addresses");
+        menuBackButton=secondaryButton(inWizard?"Wróć do kreatora":"Wróć do menu");
+        menuBackButton.setOnClickListener(v->onBackPressed());
+        add(root,menuBackButton,8);
 
         LinearLayout detect=card(); add(root,detect,16);
         add(detect,text("1. Podłącz i wykryj silnik",18,WHITE,true),0);
@@ -597,6 +601,7 @@ public final class MainActivity extends Activity {
         handler.post(()->{
             busyVisual.setVisibility(b?View.VISIBLE:View.GONE);animateActivity(b);
             if(b){codeStages.setVisibility(View.GONE);progress.setTextColor(GREY);}
+            menuBackButton.setEnabled(!b);
             detectButton.setEnabled(!b);
             if(manualButton!=null) manualButton.setEnabled(!b);
             if(factoryButton!=null) factoryButton.setEnabled(!b);
@@ -763,7 +768,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.2.0\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.2.1\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")

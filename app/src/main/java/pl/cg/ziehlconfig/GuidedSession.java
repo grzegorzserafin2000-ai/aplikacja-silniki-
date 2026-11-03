@@ -37,6 +37,10 @@ public final class GuidedSession {
         && (h4 & 15) == 3;
   }
 
+  public static boolean canFinish(int[] planned, boolean[] confirmed, boolean finalTestConfirmed) {
+    return finalTestConfirmed && allConfirmed(planned, confirmed);
+  }
+
   public static boolean allConfirmed(int[] planned, boolean[] confirmed) {
     if (planned.length == 0 || planned.length != confirmed.length) return false;
     for (boolean ok : confirmed) if (!ok) return false;

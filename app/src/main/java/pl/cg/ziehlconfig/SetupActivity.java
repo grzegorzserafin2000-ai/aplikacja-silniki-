@@ -350,6 +350,12 @@ public final class SetupActivity extends Activity {
             startActivityForResult(intent, VERIFY);
           });
       button("Eksportuj raport", () -> export());
+      boolean canFinish = GuidedSession.canFinish(planned, confirmed, verified);
+      Button finishButton = button("Zakończ procedurę", () -> finishProcedure());
+      finishButton.setEnabled(canFinish);
+      finishButton.setAlpha(canFinish ? 1f : .4f);
+      if (!canFinish)
+        text("Zakończenie będzie dostępne po poprawnym sprawdzeniu wszystkich wentylatorów.", 14);
     }
     if (step > 0)
       button(
@@ -364,6 +370,27 @@ public final class SetupActivity extends Activity {
           save();
           menu();
         });
+  }
+
+  private void finishProcedure() {
+    if (!GuidedSession.canFinish(planned, confirmed, verified)) {
+      message("Najpierw wykonaj poprawny końcowy test wszystkich wentylatorów.");
+      return;
+    }
+    log +=
+        "\n"
+            + new java.util.Date()
+            + " — PROCEDURA ZAKOŃCZONA. Wszystkie wentylatory potwierdzone.\n";
+    save();
+    step = -1;
+    page("✓ Procedura zakończona");
+    text(central, 20);
+    text(
+        "Kodowanie i końcowy test wszystkich wentylatorów zostały potwierdzone. Możesz zapisać"
+            + " raport lub wrócić do menu.",
+        17);
+    button("Eksportuj raport", () -> export());
+    button("Wróć do menu", () -> menu());
   }
 
   private void launchMotor() {

@@ -27,9 +27,10 @@ public final class GuidedSessionTest {
     check(GuidedSession.centralNumber("C", "12345").equals("C12345"));
     check(GuidedSession.centralNumber("K", "12345").equals("K12345"));
     check(GuidedSession.centralNumber("K", " 4234 ").equals("K4234"));
-    for(String digits:new String[]{"1","123","123456","00012345678901234567890","9".repeat(10000)}) {
-      check(GuidedSession.centralNumber("C",digits).equals("C"+digits));
-      check(GuidedSession.centralNumber("K",digits).equals("K"+digits));
+    for (String digits :
+        new String[] {"1", "123", "123456", "00012345678901234567890", "9".repeat(10000)}) {
+      check(GuidedSession.centralNumber("C", digits).equals("C" + digits));
+      check(GuidedSession.centralNumber("K", digits).equals("K" + digits));
     }
     invalid(() -> GuidedSession.centralNumber("C", ""));
     invalid(() -> GuidedSession.centralNumber("C", null));
@@ -39,6 +40,11 @@ public final class GuidedSessionTest {
     check(!GuidedSession.allConfirmed(new int[0], new boolean[0]));
     check(!GuidedSession.allConfirmed(new int[] {231, 232}, new boolean[] {true}));
     check(GuidedSession.allConfirmed(new int[] {231, 232}, new boolean[] {true, true}));
+    check(!GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true, true}, false));
+    check(!GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true, false}, true));
+    check(!GuidedSession.canFinish(new int[0], new boolean[0], true));
+    check(!GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true}, true));
+    check(GuidedSession.canFinish(new int[] {231, 232}, new boolean[] {true, true}, true));
     int h3 = ModbusRtu.configValue(231, 9600, "8N2");
     check(GuidedSession.verificationMatches(231, 0x100, h3, 0xA503));
     check(GuidedSession.verificationMatches(231, 0x101, h3, 3));
