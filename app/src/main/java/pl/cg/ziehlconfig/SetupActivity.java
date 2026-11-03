@@ -178,7 +178,7 @@ public final class SetupActivity extends Activity {
                 new AlertDialog.Builder(this)
                     .setMessage(
                         "Rozpocząć nową sesję? Poprzedni postęp zostanie usunięty. Najpierw możesz"
-                            + " wyeksportować raport.")
+                            + " wyświetlić lub zapisać raport.")
                     .setPositiveButton(
                         "Nowa sesja",
                         (x, w) -> {
@@ -194,7 +194,7 @@ public final class SetupActivity extends Activity {
                           render();
                         })
                     .setNegativeButton("Anuluj", null)
-                    .setNeutralButton("Eksportuj raport", (x, w) -> export())
+                    .setNeutralButton("Wyświetl raport", (x, w) -> showReport())
                     .show();
             })
         .show();
@@ -344,7 +344,7 @@ public final class SetupActivity extends Activity {
             intent.putExtra("verify_addresses", planned);
             startActivityForResult(intent, VERIFY);
           });
-      button("Eksportuj raport", () -> export());
+      button("Wyświetl raport", () -> showReport());
       boolean canFinish = GuidedSession.canFinish(planned, confirmed, verified);
       Button finishButton = button("Zakończ procedurę", () -> finishProcedure());
       finishButton.setEnabled(canFinish);
@@ -381,10 +381,10 @@ public final class SetupActivity extends Activity {
     page("✓ Procedura zakończona");
     text(central, 20);
     text(
-        "Kodowanie i końcowy test wszystkich wentylatorów zostały potwierdzone. Możesz zapisać"
-            + " raport lub wrócić do menu.",
+        "Kodowanie i końcowy test wszystkich wentylatorów zostały potwierdzone. Możesz wyświetlić"
+            + " raport, zapisać go lub wrócić do menu.",
         17);
-    button("Eksportuj raport", () -> export());
+    button("Wyświetl raport", () -> showReport());
     button("Wróć do menu", () -> menu());
   }
 
@@ -447,6 +447,30 @@ public final class SetupActivity extends Activity {
         + (verified ? "POTWIERDZONY" : "NIEPOTWIERDZONY")
         + "\n"
         + log;
+  }
+
+  private void showReport() {
+    ScrollView scroll = new ScrollView(this);
+    scroll.setFillViewport(true);
+    scroll.setBackgroundColor(Color.BLACK);
+    TextView content = new TextView(this);
+    content.setText(report());
+    content.setTextSize(16);
+    content.setTextColor(Color.WHITE);
+    content.setTextIsSelectable(true);
+    content.setPadding(dp(20), dp(16), dp(20), dp(24));
+    scroll.addView(content);
+    AlertDialog dialog = new AlertDialog.Builder(this)
+        .setTitle("Raport centrali " + central)
+        .setView(scroll)
+        .setPositiveButton("Zamknij", null)
+        .setNeutralButton("Zapisz jako TXT", (d, which) -> export())
+        .create();
+    dialog.show();
+    if (dialog.getWindow() != null)
+      dialog.getWindow().setLayout(
+          WindowManager.LayoutParams.MATCH_PARENT,
+          (int) (getResources().getDisplayMetrics().heightPixels * .85f));
   }
 
   private void export() {

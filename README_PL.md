@@ -92,3 +92,13 @@ i zatrzymują się po ukryciu ekranu. Na końcu trzeba włączyć wszystkie went
 i wykonać końcowy test, zanim pojawi się możliwość zakończenia procedury.
 Raport zachowuje informacje techniczne; konfiguracja zaawansowana pozostaje dostępna.
 Wersja testowa — działanie na tablecie i fizycznych silnikach wymaga próby sprzętowej.
+
+
+## Podgląd raportu 1.3.1
+
+[Pobierz APK 1.3.1 — kreator z podglądem raportu](downloads/ClimaGold_Kreator_1.3.1.apk)
+
+Przycisk „Wyświetl raport” na końcu testu i po zakończeniu procedury otwiera
+przewijany raport bezpośrednio w aplikacji. Tekst można zaznaczać i kopiować.
+Przycisk „Zapisz jako TXT” w podglądzie uruchamia zapis pliku tylko na żądanie.
+Podgląd jest również dostępny przed rozpoczęciem nowej sesji.

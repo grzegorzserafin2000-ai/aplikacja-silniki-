@@ -851,7 +851,7 @@ public final class MainActivity extends Activity {
             int[] counters={0};
             int profiles=0;
             StringBuilder report=new StringBuilder();
-            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.3.0\n")
+            report.append("Clima Gold ZIEHL-ABEGG CM3 Android TEST 1.3.1\n")
                   .append("Adapter VID=").append(driver.getDevice().getVendorId())
                   .append(" PID=").append(driver.getDevice().getProductId()).append("\n")
                   .append("Tryb rozszerzony: ").append(extended).append("\n")
